@@ -1,0 +1,206 @@
+# leanforge-mcp — Full LLM Context
+
+MCP server for AI-driven formal proof search in Lean 4.
+Based on AlphaProof Nexus (arXiv:2605.22763, DeepMind May 2026).
+
+## Architecture
+
+leanforge-mcp is a FastMCP 3.2 server. On startup, a lifespan context manager
+creates three shared components: JobManager (SQLite persistence), LeanClient
+(wraps `lake env lean` for Mathlib-aware compilation), and Runner (orchestrates
+parallel proof search). These are stored in FastMCP lifespan context and
+retrieved by tool handlers via `ctx.lifespan["runner"]`.
+
+`submit_theorem` starts a background asyncio.Task and returns a job_id
+immediately. The task runs `run_parallel_agents()` which spawns N independent
+subagents. Each subagent loops: call LLM with current Lean file and last
+compiler error -> parse search-replace response -> apply edit -> compile with
+`lake env lean` -> feed output back to LLM. First subagent to produce a
+sorry-free compile wins; others are cancelled. All attempts persist to SQLite.
+
+## Why `lake env lean`, not `lean`
+
+A bare `lean` invocation cannot resolve `import Mathlib`. Lean code must run
+inside a Lake project with Mathlib dependencies and precompiled oleans on the
+search path. The correct invocation is `lake env lean <file>`, which sets up
+the full Lake project environment before invoking the compiler. A persistent
+Lake workspace with Mathlib must be created once (one-time ~4GB download via
+`lake exe cache get`).
+
+## LLM tiers
+
+Tier 1: local Ollama, deepseek-prover-v2:7b, free, ~15 tok/s on RTX 4090.
+Tier 2: DeepSeek V4 Flash API, ~$0.001 per attempt.
+Tier 3: Claude Fable 5, $50/M output, reserved for hard open problems.
+
+Escalation is per-subagent and irreversible within a job. Thresholds
+configurable in config.toml (default: tier 1->2 at turn 20, 2->3 at turn 60).
+
+## Tools
+
+### submit_theorem
+Submit a theorem for formal proof search.
+Input: statement (Lean 4 proposition), optional lean_stub (complete file with
+sorry), optional hints (Mathlib theorem names), tier (1-3), parallel_agents
+(1-16), max_turns (1-1000).
+Returns: job_id (UUID string), status ("queued"), message.
+Behavior: creates SQLite job record, starts background asyncio.Task, returns
+immediately. Use get_proof_status to poll.
+
+### submit_lean_file
+Submit a complete Lean 4 file with sorry placeholders.
+Input: lean_source (complete file with sorry), description, tier, parallel_agents,
+max_turns.
+Returns: job_id, sorry_count, message.
+Use for: MiniF2F problem files, AlphaProof Nexus stub files from
+google-deepmind/alphaproof-nexus-results.
+
+### get_proof_status
+Poll a proof search job.
+Input: job_id (UUID string).
+Returns: status (queued/running/complete/failed/cancelled/interrupted),
+proof (complete Lean file if status=complete), latest_turn, latest_compiler_output,
+latest_model.
+Polling interval: 10-30 seconds for running jobs.
+
+### list_attempts
+Inspect proof search trajectory for a job.
+Input: job_id, optional agent_index (filter to one subagent), last_n (default 10).
+Returns: list of attempts with agent_index, turn, success, llm_model,
+compiler_output (truncated to 400 chars).
+Use for: understanding why search is stuck, inspecting what strategies were tried.
+
+### list_jobs
+List all jobs with status.
+Input: optional status_filter (queued/running/complete/failed/cancelled/
+interrupted), limit (default 20).
+Returns: list of jobs with job_id, status, description, created_at.
+
+### cancel_job
+Cancel a running proof search job.
+Input: job_id.
+Returns: confirmation or current status if no live task found.
+
+### validate_lean
+Run the Lean 4 compiler on arbitrary source. No job tracking, no LLM.
+Input: lean_source (Lean 4 code).
+Returns: success (bool), proven (bool), has_sorry (bool), errors (list),
+warnings (list).
+Use for: testing a proof before submitting, debugging Lean syntax,
+validating the compile pipeline works.
+
+### get_mathlib_search
+Search Mathlib4 for theorems by natural language.
+Input: query (natural language description), limit (default 5).
+Returns: list of {name, statement, module} for matching Mathlib theorems.
+Use for: finding the right lemma name when the agent is stuck; pass result as
+hints to submit_theorem.
+Data source: LeanSearch API at leansearch.net.
+
+## Typical agent workflow
+
+Step 1: validate_lean("import Mathlib\nexample : 1 = 1 := rfl\n")
+  -> {"proven": true} confirms the compile pipeline works.
+
+Step 2: submit_theorem(statement="for all n : nat, 2 * sum(0..n) = n*(n+1)",
+    tier=1, parallel_agents=4, max_turns=100)
+  -> {"job_id": "abc-123", "status": "queued"}
+
+Step 3: [wait 10-30 seconds]
+  get_proof_status("abc-123")
+  -> {"status": "running", "latest_turn": 7, "latest_compiler_output": "..."}
+
+Step 4: [wait until complete or failed]
+  get_proof_status("abc-123")
+  -> {"status": "complete", "proof": "import Mathlib\n...\n  induction n with\n  ..."}
+
+If status=failed:
+  list_attempts("abc-123", last_n=5) to inspect what was tried.
+  Resubmit with tier=2 or with hints from get_mathlib_search.
+
+## Training wheels — problems in difficulty order
+
+Tier 0 (sanity): trivial arithmetic
+  validate_lean("import Mathlib\nexample : 1 + 1 = 2 := by norm_num\n")
+
+Tier 1 (MiniF2F): 488 pre-formalized olympiad problems.
+  Clone github.com/leanprover-community/miniF2F and submit files directly via
+  submit_lean_file.
+
+Tier 2 (PutnamBench): 658 Putnam competition problems.
+  DeepSeek-Prover-V2 671B solves 49/658; good baseline.
+
+Tier 3 (AlphaProof Nexus unsolved): Pre-formalized Lean stubs for 344 unsolved
+  Erdos problems at github.com/google-deepmind/alphaproof-nexus-results.
+  Submit via submit_lean_file.
+
+Tier 4 (open research): erdosproblems.com ~900 open problems. Requires manual
+  Lean formalization of the theorem statement first.
+
+## Key files
+
+src/leanforge_mcp/
+  server.py          FastMCP entry point, lifespan, mount composition
+  core/
+    agent.py         proof loop, statement tamper detection, parallel agents
+    lean_client.py   lake env lean subprocess, concurrency semaphore
+    llm_client.py    Ollama/DeepSeek/Anthropic, tier escalation
+    job_manager.py   SQLite CRUD, job lifecycle, attempt persistence
+    runner.py        Runner class, task registry, start_job/cancel
+    config.py        TOML loader, typed dataclasses
+  tools/
+    submit.py        submit_theorem, submit_lean_file
+    status.py        get_proof_status, list_attempts, list_jobs, validate_lean
+    control.py       cancel_job
+    mathlib.py       get_mathlib_search
+scripts/
+  smoke_test.py      standalone validation, run before anything else
+tests/
+  test_pipeline.py   pure Python pytest, no Lean needed
+
+## One-time setup required
+
+Before the server will function, run once:
+  cd workspace
+  lake new leanforge_workspace math
+  cd leanforge_workspace
+  lake exe cache get    (downloads ~4GB precompiled Mathlib)
+  lake build
+
+Then copy config.example.toml to config.toml and set lake_path to the
+absolute path of lake.exe (typically C:\Users\{user}\.elan\bin\lake.exe).
+
+## Configuration keys
+
+[lean]
+lake_path = path to lake.exe
+workspace_dir = path to Lake project with Mathlib
+compile_timeout = 120 (seconds per compile)
+max_concurrent_compiles = 4 (semaphore gate)
+
+[agent]
+parallel_agents = 4
+max_turns = 100
+escalate_to_tier2_after = 20
+escalate_to_tier3_after = 60
+
+[llm.tier1] provider=ollama model=deepseek-prover-v2:7b
+[llm.tier2] provider=openai_compat model=deepseek/deepseek-v4-flash
+[llm.tier3] provider=anthropic model=claude-fable-5
+
+[database] path = path to SQLite db file
+[server] transport = stdio
+[logging] level = INFO
+
+## References
+
+AlphaProof Nexus paper: arxiv.org/abs/2605.22763
+AlphaProof Nexus results + unsolved stubs:
+  github.com/google-deepmind/alphaproof-nexus-results
+DeepSeek-Prover-V2: arxiv.org/abs/2504.21801
+Mathlib4: github.com/leanprover-community/mathlib4
+LeanSearch: leansearch.net
+MiniF2F: github.com/leanprover-community/miniF2F
+Lean 4 setup: leanprover-community.github.io/install/project.html
+erdosproblems.com: open Erdos problem catalog (~900 problems)
+Natural Number Game (browser Lean intro): adam.math.hhu.de

@@ -1,0 +1,74 @@
+# leanforge-mcp configuration
+# Copy to config.toml and fill in your values
+
+[lean]
+# Absolute path to LAKE executable (not lean) — we run `lake env lean` so Mathlib resolves
+lake_path = "C:\\Users\\sandr\\.elan\\bin\\lake.exe"
+
+# Lake project with Mathlib dependency + cached oleans. ONE-TIME SETUP:
+#   cd D:\Dev\repos\leanforge-mcp\workspace
+#   lake new leanforge_workspace math
+#   cd leanforge_workspace
+#   lake exe cache get      (downloads ~4GB precompiled Mathlib)
+#   lake build
+workspace_dir = "D:\\Dev\\repos\\leanforge-mcp\\workspace\\leanforge_workspace"
+
+# Per-compile timeout in seconds (Mathlib compiles are slow; 120 is reasonable)
+compile_timeout = 120
+
+# Cap concurrent Lean processes — each loads Mathlib (~GBs RAM). 4 is safe on 64GB.
+max_concurrent_compiles = 4
+
+# Retain temp Lean files after job completes (debugging)
+retain_workspace = false
+
+[database]
+path = "D:\\Dev\\repos\\leanforge-mcp\\data\\jobs.db"
+
+[agent]
+# Default number of parallel subagents per job
+parallel_agents = 4
+
+# Default max turns per subagent before giving up
+max_turns = 100
+
+# Turn thresholds for LLM tier escalation per subagent
+escalate_to_tier2_after = 20
+escalate_to_tier3_after = 60
+
+[llm.tier1]
+# Local Ollama — free, ~15 tok/s on 4090
+# Pull model: ollama pull deepseek-prover-v2:7b
+# NOTE: /v1 suffix is REQUIRED — Ollama serves the OpenAI-compatible API there
+provider = "ollama"
+model = "deepseek-prover-v2:7b"
+base_url = "http://localhost:11434/v1"
+max_tokens = 2048
+temperature = 0.7
+
+[llm.tier2]
+# DeepSeek API — cheap, strong reasoning
+provider = "openai_compat"
+model = "deepseek/deepseek-v4-flash"
+base_url = "https://api.deepseek.com/v1"
+api_key_env = "DEEPSEEK_API_KEY"
+max_tokens = 4096
+temperature = 0.7
+
+[llm.tier3]
+# Claude Fable 5 — $10/M input, $50/M output
+# Reserve for hard open problems only
+provider = "anthropic"
+model = "claude-fable-5"
+api_key_env = "ANTHROPIC_API_KEY"
+max_tokens = 8192
+temperature = 1.0
+
+[server]
+transport = "stdio"
+host = "127.0.0.1"
+port = 8765
+
+[logging]
+level = "INFO"
+log_file = "D:\\Dev\\repos\\leanforge-mcp\\logs\\leanforge.log"

@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+data/
+workspace/
+logs/
+config.toml
+*.db
+*.db-wal
+*.db-shm
+.env
+
+# Web frontend
+node_modules/
+dist/
+
+*.bak

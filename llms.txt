@@ -1,0 +1,43 @@
+# leanforge-mcp
+
+MCP server for AI-driven formal proof search in Lean 4.
+
+## What it does
+
+Exposes a formal theorem proving pipeline as MCP tools. Submit a theorem
+(natural language or a Lean 4 stub with sorry), the server runs parallel
+proof-search agents: LLM propose → Lean compile → error feedback → repeat
+until a sorry-free proof is found or budget runs out.
+
+Based on AlphaProof Nexus (arXiv:2605.22763, DeepMind May 2026).
+
+## Tools
+
+- submit_theorem: Submit a theorem for proof search. Returns job_id immediately.
+- submit_lean_file: Submit a complete .lean file with sorry placeholders.
+- get_proof_status: Poll job. Returns proven Lean file if complete.
+- list_attempts: Inspect proof search trajectory for a job.
+- list_jobs: List all jobs with status.
+- cancel_job: Stop a running job.
+- validate_lean: Compile arbitrary Lean 4 code and return compiler output.
+- get_mathlib_search: Find relevant Mathlib theorems by natural language query.
+
+## Key concepts
+
+- Lean 4: functional language + proof assistant. Proofs are programs.
+- sorry: placeholder meaning trust me, skip this proof. Invalid until replaced.
+- Mathlib: 150k+ formalized theorems. Most undergrad math is in there.
+- Compiler feedback: exact error messages fed back to LLM for self-correction.
+
+## Typical workflow
+
+1. submit_theorem(statement="for all n, sum of 1..n = n*(n+1)/2")
+   -> {"job_id": "abc123", "status": "queued"}
+2. get_proof_status("abc123")  [poll every 10-30s]
+   -> {"status": "complete", "proof": "by induction n with ..."}
+
+## LLM tiers
+
+tier=1: Local Ollama, DeepSeek-Prover-V2 7B, free, ~15 tok/s on RTX 4090
+tier=2: DeepSeek V4 Flash API, ~$0.001 per attempt
+tier=3: Claude Fable 5, $50/M output, for hard open problems only
