@@ -8,8 +8,8 @@ from __future__ import annotations
 import json
 import logging
 import uuid
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -82,7 +82,7 @@ class JobManager:
         logger.info("JobManager initialised at %s", self.db_path)
 
     def _now(self) -> str:
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()
 
     async def create_job(
         self,
@@ -101,9 +101,14 @@ class JobManager:
                     description, tier_config, parallel_agents, max_turns)
                    VALUES (?, ?, ?, 'queued', ?, NULL, ?, ?, ?, ?)""",
                 (
-                    job_id, now, now, lean_source, description,
+                    job_id,
+                    now,
+                    now,
+                    lean_source,
+                    description,
                     json.dumps(tier_config or {}),
-                    parallel_agents, max_turns,
+                    parallel_agents,
+                    max_turns,
                 ),
             )
             await db.commit()
@@ -161,9 +166,15 @@ class JobManager:
                     compiler_output, llm_model, success, created_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    str(uuid.uuid4()), job_id, agent_index, turn,
-                    lean_source, compiler_output, llm_model,
-                    1 if success else 0, self._now(),
+                    str(uuid.uuid4()),
+                    job_id,
+                    agent_index,
+                    turn,
+                    lean_source,
+                    compiler_output,
+                    llm_model,
+                    1 if success else 0,
+                    self._now(),
                 ),
             )
             await db.commit()
@@ -171,17 +182,13 @@ class JobManager:
     async def get_job(self, job_id: str) -> JobRecord | None:
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
-            async with db.execute(
-                "SELECT * FROM jobs WHERE id=?", (job_id,)
-            ) as cursor:
+            async with db.execute("SELECT * FROM jobs WHERE id=?", (job_id,)) as cursor:
                 row = await cursor.fetchone()
                 if row is None:
                     return None
                 return JobRecord(**dict(row))
 
-    async def list_jobs(
-        self, status: str | None = None, limit: int = 20
-    ) -> list[JobRecord]:
+    async def list_jobs(self, status: str | None = None, limit: int = 20) -> list[JobRecord]:
         async with aiosqlite.connect(self.db_path) as db:
             db.row_factory = aiosqlite.Row
             if status:

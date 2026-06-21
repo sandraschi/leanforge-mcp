@@ -17,19 +17,13 @@
     }
   },
   "tools": [
-    { "name": "__init___queued", "description": "__init__(queued)" },
-    { "name": "__init___running", "description": "__init__(running)" },
-    { "name": "__init___complete", "description": "__init__(complete)" },
-    { "name": "__init___failed", "description": "__init__(failed)" },
-    { "name": "__init___cancelled", "description": "__init__(cancelled)" },
-    { "name": "__init___interrupted", "description": "__init__(interrupted)" },
-    { "name": "cancel_job", "description": "cancel_job" },
-    { "name": "get_mathlib_search", "description": "get_mathlib_search" },
-    { "name": "get_proof_status", "description": "get_proof_status" },
-    { "name": "list_attempts", "description": "list_attempts" },
-    { "name": "list_jobs", "description": "list_jobs" },
-    { "name": "validate_lean", "description": "validate_lean" },
-    { "name": "submit_theorem", "description": "submit_theorem" },
-    { "name": "submit_lean_file", "description": "submit_lean_file" }
+    { "name": "cancel_job", "description": "Cancel a running proof search job. Stops all subagents immediately." },
+    { "name": "get_mathlib_search", "description": "Search Mathlib4 for theorems matching a natural language query." },
+    { "name": "get_proof_status", "description": "Poll the status of a proof search job by job_id. Returns proof on completion." },
+    { "name": "list_attempts", "description": "List proof attempts for a job with Lean source and compiler feedback per turn." },
+    { "name": "list_jobs", "description": "List all proof search jobs with status and summary." },
+    { "name": "validate_lean", "description": "Run Lean 4 compiler on source and return output. No job tracking, raw compile." },
+    { "name": "submit_theorem", "description": "Submit a theorem for formal proof search. Returns job_id immediately." },
+    { "name": "submit_lean_file", "description": "Submit a complete Lean 4 file with sorry placeholders directly." }
   ]
 }

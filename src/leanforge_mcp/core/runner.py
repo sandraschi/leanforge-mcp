@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 # route through mounted child routers is fragile across fastmcp versions
 # (a child's empty lifespan dict short-circuits the parent fallback), so the
 # server lifespan also anchors the Runner here. Single process, single Runner.
-_runner_fallback: "Runner | None" = None
+_runner_fallback: Runner | None = None
 
 
-def set_runner_fallback(runner: "Runner | None") -> None:
+def set_runner_fallback(runner: Runner | None) -> None:
     """Called by the server lifespan on startup (and with None on shutdown)."""
     global _runner_fallback
     _runner_fallback = runner
@@ -96,9 +96,7 @@ class Runner:
         self._pub(job_id, "running")
 
         async def on_attempt(agent_index, turn, src, output, model, success):
-            await self.jobs.record_attempt(
-                job_id, agent_index, turn, src, output, model, success
-            )
+            await self.jobs.record_attempt(job_id, agent_index, turn, src, output, model, success)
             self._pub_attempt(job_id, agent_index, turn, output, model, success)
 
         try:
@@ -133,12 +131,22 @@ class Runner:
             self._event_bus.publish_job_status(job_id, status, **kw)
 
     def _pub_attempt(
-        self, job_id: str, agent_index: int, turn: int,
-        output: str, model: str, success: bool,
+        self,
+        job_id: str,
+        agent_index: int,
+        turn: int,
+        output: str,
+        model: str,
+        success: bool,
     ):
         if self._event_bus:
             self._event_bus.publish_attempt(
-                job_id, agent_index, turn, output, model, success,
+                job_id,
+                agent_index,
+                turn,
+                output,
+                model,
+                success,
             )
 
     async def cancel(self, job_id: str) -> bool:
@@ -181,6 +189,5 @@ def get_runner(ctx) -> Runner:
     if _runner_fallback is not None:
         return _runner_fallback
     raise RuntimeError(
-        "Runner not found in lifespan context. "
-        "Server may not have completed startup."
+        "Runner not found in lifespan context. Server may not have completed startup."
     )

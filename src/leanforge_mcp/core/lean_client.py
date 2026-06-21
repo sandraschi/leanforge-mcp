@@ -104,7 +104,7 @@ class LeanClient:
                     stdout_bytes, stderr_bytes = await asyncio.wait_for(
                         proc.communicate(), timeout=self.timeout
                     )
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     proc.kill()
                     await proc.communicate()
                     logger.warning("Lean compile timed out after %ds", self.timeout)

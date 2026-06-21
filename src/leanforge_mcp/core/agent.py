@@ -10,8 +10,9 @@ import asyncio
 import hashlib
 import logging
 import re
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Awaitable, Callable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from leanforge_mcp.core.lean_client import LeanClient
@@ -113,8 +114,8 @@ def _apply_edit(source: str, old: str, new: str) -> str | None:
 async def run_subagent(
     agent_index: int,
     initial_source: str,
-    llm: "LLMClient",
-    lean: "LeanClient",
+    llm: LLMClient,
+    lean: LeanClient,
     max_turns: int,
     on_attempt: AttemptHook | None = None,
 ) -> SubagentResult:
@@ -155,8 +156,7 @@ async def run_subagent(
             note = stuck_match.group(1)[:200]
             logger.info("Subagent %d stuck at turn %d: %s", agent_index, turn, note)
             last_error = (
-                "Previous strategy failed. Try a completely different approach.\n"
-                f"Your note: {note}"
+                f"Previous strategy failed. Try a completely different approach.\nYour note: {note}"
             )
             att = Attempt(turn, source, "STUCK", model_used, False, "(stuck — no edit)")
             attempts.append(att)
@@ -168,8 +168,7 @@ async def run_subagent(
         if not replace_match:
             logger.debug("Subagent %d no edit parsed at turn %d", agent_index, turn)
             last_error = (
-                "Could not parse your response. "
-                "Use the <<<REPLACE...REPLACE>>> format exactly."
+                "Could not parse your response. Use the <<<REPLACE...REPLACE>>> format exactly."
             )
             continue
 
@@ -188,7 +187,8 @@ async def run_subagent(
         if _statement_hash(new_source) != statement_hash:
             logger.warning(
                 "Subagent %d attempted to modify theorem statement at turn %d",
-                agent_index, turn,
+                agent_index,
+                turn,
             )
             last_error = (
                 "You modified the theorem statement. This is not allowed. "
@@ -211,9 +211,7 @@ async def run_subagent(
         )
         attempts.append(att)
         if on_attempt:
-            await on_attempt(
-                agent_index, turn, source, compiler_output, model_used, result.proven
-            )
+            await on_attempt(agent_index, turn, source, compiler_output, model_used, result.proven)
 
         if result.proven:
             logger.info("Subagent %d PROVED at turn %d", agent_index, turn)
@@ -240,8 +238,8 @@ async def run_subagent(
 
 async def run_parallel_agents(
     source: str,
-    llm_factory: Callable[[], "LLMClient"],
-    lean: "LeanClient",
+    llm_factory: Callable[[], LLMClient],
+    lean: LeanClient,
     n_agents: int,
     max_turns: int,
     on_attempt: AttemptHook | None = None,
@@ -252,18 +250,14 @@ async def run_parallel_agents(
     on_attempt, if given, is called once per completed turn per agent for persistence.
     """
     tasks = [
-        asyncio.create_task(
-            run_subagent(i, source, llm_factory(), lean, max_turns, on_attempt)
-        )
+        asyncio.create_task(run_subagent(i, source, llm_factory(), lean, max_turns, on_attempt))
         for i in range(n_agents)
     ]
 
     pending = set(tasks)
     try:
         while pending:
-            done, pending = await asyncio.wait(
-                pending, return_when=asyncio.FIRST_COMPLETED
-            )
+            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
             for task in done:
                 result = task.result()
                 if result.proven:

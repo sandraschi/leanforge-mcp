@@ -37,20 +37,24 @@ class LLMTierConfig:
 @dataclass
 class LLMConfig:
     tier1: LLMTierConfig = field(default_factory=LLMTierConfig)
-    tier2: LLMTierConfig = field(default_factory=lambda: LLMTierConfig(
-        provider="openai_compat",
-        model="deepseek/deepseek-v4-flash",
-        base_url="https://api.deepseek.com/v1",
-        api_key_env="DEEPSEEK_API_KEY",
-        max_tokens=4096,
-    ))
-    tier3: LLMTierConfig = field(default_factory=lambda: LLMTierConfig(
-        provider="anthropic",
-        model="claude-fable-5",
-        api_key_env="ANTHROPIC_API_KEY",
-        max_tokens=8192,
-        temperature=1.0,
-    ))
+    tier2: LLMTierConfig = field(
+        default_factory=lambda: LLMTierConfig(
+            provider="openai_compat",
+            model="deepseek/deepseek-v4-flash",
+            base_url="https://api.deepseek.com/v1",
+            api_key_env="DEEPSEEK_API_KEY",
+            max_tokens=4096,
+        )
+    )
+    tier3: LLMTierConfig = field(
+        default_factory=lambda: LLMTierConfig(
+            provider="anthropic",
+            model="claude-fable-5",
+            api_key_env="ANTHROPIC_API_KEY",
+            max_tokens=8192,
+            temperature=1.0,
+        )
+    )
 
 
 @dataclass
@@ -87,6 +91,7 @@ class Config:
 def _from_dict(cls, data: dict):
     """Recursively populate a dataclass from a dict."""
     import dataclasses
+
     if not dataclasses.is_dataclass(cls):
         return data
     kwargs = {}
@@ -103,16 +108,15 @@ def _from_dict(cls, data: dict):
 
 
 def load_config(path: Path) -> Config:
-    with open(path, "rb") as f:
+    with path.open("rb") as f:
         raw = tomllib.load(f)
 
     config = Config()
 
     if "lean" in raw:
-        config.lean = LeanConfig(**{
-            k: v for k, v in raw["lean"].items()
-            if k in LeanConfig.__dataclass_fields__
-        })
+        config.lean = LeanConfig(
+            **{k: v for k, v in raw["lean"].items() if k in LeanConfig.__dataclass_fields__}
+        )
     if "database" in raw:
         config.database = DatabaseConfig(**raw["database"])
     if "agent" in raw:

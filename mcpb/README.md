@@ -19,12 +19,6 @@ Add to \claude_desktop_config.json\:
 
 ## Tools
 
-- **__init___queued**: __init__(queued)
-- **__init___running**: __init__(running)
-- **__init___complete**: __init__(complete)
-- **__init___failed**: __init__(failed)
-- **__init___cancelled**: __init__(cancelled)
-- **__init___interrupted**: __init__(interrupted)
 - **cancel_job**: cancel_job
 - **get_mathlib_search**: get_mathlib_search
 - **get_proof_status**: get_proof_status

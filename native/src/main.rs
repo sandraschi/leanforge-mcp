@@ -30,7 +30,7 @@ fn main() {
         ])
         .setup(|app| {
             let handle = app.handle().clone();
-            if let Err(e) = spawn_backend(handle.clone(), app.state::<BackendProcess>().inner()) {
+            if let Err(e) = spawn_backend(handle.clone(), &*app.state::<BackendProcess>()) {
                 eprintln!("Backend error: {e}");
                 let _ = handle.emit("backend-status", format!("error: {e}"));
             }
