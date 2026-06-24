@@ -1,5 +1,8 @@
 const BASE = "/api";
-export const API_BASE = "http://127.0.0.1:10855";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 export interface Job {
   job_id: string;
@@ -38,16 +41,95 @@ export interface Problem {
   updated_at: string;
 }
 
+export interface SystemStatus {
+  server: string;
+  version: string;
+  checked_at: string;
+  lean_workspace: {
+    ok: boolean | null;
+    message: string;
+    checked_at: string | null;
+  };
+  database: {
+    path: string;
+    exists: boolean;
+    size_bytes: number | null;
+  };
+  config: {
+    parallel_agents: number;
+    max_turns: number;
+    max_concurrent_compiles: number;
+    escalate_to_tier2_after: number;
+    escalate_to_tier3_after: number;
+    tier1_model: string;
+    tier2_model: string;
+    tier3_model: string;
+  };
+  jobs: {
+    total: number;
+    running: number;
+    complete: number;
+    failed: number;
+    cancelled: number;
+    interrupted: number;
+    live_tasks: number;
+  };
+}
+
+export interface HealthResponse {
+  status: string;
+  server: string;
+  version: string;
+  lean_workspace_ok: boolean | null;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, init);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`API ${path} returned ${res.status}: ${text}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+// ---------------------------------------------------------------------------
+// Health / status
+// ---------------------------------------------------------------------------
+
+export async function fetchHealth(): Promise<HealthResponse> {
+  return apiFetch<HealthResponse>("/health");
+}
+
+export async function fetchStatus(): Promise<SystemStatus> {
+  return apiFetch<SystemStatus>("/status");
+}
+
+// ---------------------------------------------------------------------------
+// Docs
+// ---------------------------------------------------------------------------
+
+export async function fetchDoc(name: string): Promise<string> {
+  const res = await fetch(`${BASE}/docs/${encodeURIComponent(name)}`);
+  if (!res.ok) throw new Error(`Doc '${name}' not found (${res.status})`);
+  return res.text();
+}
+
+// ---------------------------------------------------------------------------
+// Jobs
+// ---------------------------------------------------------------------------
+
 export async function fetchJobs(status?: string, limit = 50): Promise<{ jobs: Job[] }> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (status) params.set("status", status);
-  const res = await fetch(`${BASE}/jobs?${params}`);
-  return res.json();
+  return apiFetch<{ jobs: Job[] }>(`/jobs?${params}`);
 }
 
 export async function fetchJob(jobId: string): Promise<JobDetail> {
-  const res = await fetch(`${BASE}/jobs/${jobId}`);
-  return res.json();
+  return apiFetch<JobDetail>(`/jobs/${jobId}`);
 }
 
 export async function submitTheorem(body: {
@@ -58,12 +140,11 @@ export async function submitTheorem(body: {
   parallel_agents?: number;
   max_turns?: number;
 }): Promise<{ job_id: string; status: string }> {
-  const res = await fetch(`${BASE}/jobs`, {
+  return apiFetch("/jobs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  return res.json();
 }
 
 export async function submitLeanFile(body: {
@@ -73,17 +154,15 @@ export async function submitLeanFile(body: {
   parallel_agents?: number;
   max_turns?: number;
 }): Promise<{ job_id: string; status: string }> {
-  const res = await fetch(`${BASE}/jobs/lean-file`, {
+  return apiFetch("/jobs/lean-file", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  return res.json();
 }
 
 export async function cancelJob(jobId: string): Promise<{ status: string }> {
-  const res = await fetch(`${BASE}/jobs/${jobId}/cancel`, { method: "POST" });
-  return res.json();
+  return apiFetch(`/jobs/${jobId}/cancel`, { method: "POST" });
 }
 
 export function subscribeJobStream(
@@ -108,19 +187,21 @@ export function subscribeJobStream(
   return es;
 }
 
+// ---------------------------------------------------------------------------
+// Problems
+// ---------------------------------------------------------------------------
+
 export async function fetchProblems(
   source?: string,
   limit = 50,
 ): Promise<{ problems: Problem[] }> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (source) params.set("source", source);
-  const res = await fetch(`${BASE}/problems?${params}`);
-  return res.json();
+  return apiFetch<{ problems: Problem[] }>(`/problems?${params}`);
 }
 
 export async function fetchProblem(id: string): Promise<Problem> {
-  const res = await fetch(`${BASE}/problems/${id}`);
-  return res.json();
+  return apiFetch<Problem>(`/problems/${id}`);
 }
 
 export async function createProblem(body: {
@@ -132,19 +213,15 @@ export async function createProblem(body: {
   tags?: string;
   notes?: string;
 }): Promise<{ id: string }> {
-  const res = await fetch(`${BASE}/problems`, {
+  return apiFetch("/problems", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  return res.json();
 }
 
-export async function updateProblem(
-  id: string,
-  body: Partial<Problem>,
-): Promise<void> {
-  await fetch(`${BASE}/problems/${id}`, {
+export async function updateProblem(id: string, body: Partial<Problem>): Promise<void> {
+  await apiFetch(`/problems/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -152,5 +229,5 @@ export async function updateProblem(
 }
 
 export async function deleteProblem(id: string): Promise<void> {
-  await fetch(`${BASE}/problems/${id}`, { method: "DELETE" });
+  await apiFetch(`/problems/${id}`, { method: "DELETE" });
 }

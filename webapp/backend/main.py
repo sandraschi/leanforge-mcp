@@ -6,7 +6,7 @@ as the stdio MCP server. Runs as a separate process to provide REST API + SSE
 for the web frontend.
 
 Usage:
-    cd D:\Dev\repos\leanforge-mcp
+    cd D:\\Dev\\repos\\leanforge-mcp
     uv run python -m webapp.backend.main
 """
 
@@ -16,6 +16,7 @@ import asyncio
 import logging
 import sys
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 
 import uvicorn
@@ -28,7 +29,7 @@ from leanforge_mcp.core.lean_client import LeanClient
 from leanforge_mcp.core.runner import Runner
 
 from webapp.backend.event_bus import JobEventBus
-from webapp.backend.routes import jobs, problems, stream
+from webapp.backend.routes import docs, jobs, problems, status, stream
 
 CONFIG_PATH = Path(__file__).parent.parent.parent / "config.toml"
 BACKEND_PORT = 10855
@@ -57,11 +58,18 @@ async def lifespan(app: FastAPI):
         compile_semaphore=asyncio.Semaphore(config.lean.max_concurrent_compiles),
     )
 
-    ok, msg = await lean.ensure_workspace()
-    if ok:
+    # Check workspace once at startup and cache — the status endpoint returns
+    # this cached result so it never blocks on a Lean compile at request time.
+    ws_ok, ws_msg = await lean.ensure_workspace()
+    app.state.lean_workspace_status = {
+        "ok": ws_ok,
+        "message": ws_msg,
+        "checked_at": datetime.now(UTC).isoformat(),
+    }
+    if ws_ok:
         logger.info("Lean workspace OK")
     else:
-        logger.warning("Lean workspace not ready:\n%s", msg)
+        logger.warning("Lean workspace not ready:\n%s", ws_msg)
 
     event_bus = JobEventBus()
     runner = Runner(
@@ -83,7 +91,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="leanforge-mcp",
     description="Formal proof search for Lean 4 — web dashboard",
-    version="0.1.0",
+    version="0.1.1",
     lifespan=lifespan,
 )
 
@@ -94,14 +102,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(status.router)
 app.include_router(jobs.router)
 app.include_router(problems.router)
 app.include_router(stream.router)
-
-
-@app.get("/api/health")
-async def health():
-    return {"status": "ok", "server": "leanforge-mcp"}
+app.include_router(docs.router)
 
 
 def main():
