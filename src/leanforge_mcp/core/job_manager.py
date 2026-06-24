@@ -69,11 +69,20 @@ class JobManager:
         self.db_path = db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
+    async def _configure_db(self, db: aiosqlite.Connection) -> None:
+        """Apply connection-level pragmas. Call on every new connection."""
+        await db.execute("PRAGMA journal_mode=WAL")
+        await db.execute("PRAGMA busy_timeout=5000")
+        await db.execute("PRAGMA synchronous=NORMAL")
+
     async def init(self) -> None:
         async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
             await db.executescript(SCHEMA)
             await db.commit()
-            # Mark any RUNNING jobs as INTERRUPTED (process crashed)
+            # Mark any RUNNING jobs as INTERRUPTED (process crashed).
+            # Safe at startup; the webapp shares this DB but should not be
+            # writing concurrently during server init.
             await db.execute(
                 "UPDATE jobs SET status='interrupted', updated_at=? WHERE status='running'",
                 (self._now(),),
@@ -95,6 +104,7 @@ class JobManager:
         job_id = str(uuid.uuid4())
         now = self._now()
         async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
             await db.execute(
                 """INSERT INTO jobs
                    (id, created_at, updated_at, status, lean_source, proof,
@@ -117,6 +127,7 @@ class JobManager:
 
     async def set_running(self, job_id: str) -> None:
         async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
             await db.execute(
                 "UPDATE jobs SET status='running', updated_at=? WHERE id=?",
                 (self._now(), job_id),
@@ -125,6 +136,7 @@ class JobManager:
 
     async def set_complete(self, job_id: str, proof: str) -> None:
         async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
             await db.execute(
                 "UPDATE jobs SET status='complete', proof=?, updated_at=? WHERE id=?",
                 (proof, self._now(), job_id),
@@ -134,6 +146,7 @@ class JobManager:
 
     async def set_failed(self, job_id: str) -> None:
         async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
             await db.execute(
                 "UPDATE jobs SET status='failed', updated_at=? WHERE id=?",
                 (self._now(), job_id),
@@ -143,6 +156,7 @@ class JobManager:
 
     async def set_cancelled(self, job_id: str) -> None:
         async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
             await db.execute(
                 "UPDATE jobs SET status='cancelled', updated_at=? WHERE id=?",
                 (self._now(), job_id),
@@ -160,6 +174,7 @@ class JobManager:
         success: bool,
     ) -> None:
         async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
             await db.execute(
                 """INSERT INTO attempts
                    (id, job_id, agent_index, turn, lean_source,
@@ -181,6 +196,7 @@ class JobManager:
 
     async def get_job(self, job_id: str) -> JobRecord | None:
         async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
             db.row_factory = aiosqlite.Row
             async with db.execute("SELECT * FROM jobs WHERE id=?", (job_id,)) as cursor:
                 row = await cursor.fetchone()
@@ -190,6 +206,7 @@ class JobManager:
 
     async def list_jobs(self, status: str | None = None, limit: int = 20) -> list[JobRecord]:
         async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
             db.row_factory = aiosqlite.Row
             if status:
                 async with db.execute(
@@ -212,6 +229,7 @@ class JobManager:
         last_n: int = 10,
     ) -> list[dict]:
         async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
             db.row_factory = aiosqlite.Row
             if agent_index is not None:
                 async with db.execute(

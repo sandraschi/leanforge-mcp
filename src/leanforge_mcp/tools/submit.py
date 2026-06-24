@@ -24,7 +24,7 @@ class SubmitTheoremInput(BaseModel):
     statement: str = Field(
         description=(
             "The theorem to prove, as a Lean 4 proposition (the part after the colon). "
-            "Example: 'for all n : ℕ, 2 * ∑ i ∈ Finset.range (n+1), i = n * (n+1)'. "
+            "Example: '∀ n : ℕ, 2 * ∑ i ∈ Finset.range (n+1), i = n * (n+1)'. "
             "Will be wrapped in a Lean stub with sorry."
         )
     )

@@ -145,11 +145,13 @@ class LeanClient:
                 tmp_path.unlink(missing_ok=True)
 
     def _extract(self, text: str, kind: str) -> list[str]:
-        """Extract lines containing 'error:' or 'warning:' with surrounding context."""
+        """Extract Lean diagnostic lines in the form 'file:line:col: error/warning: ...'"""
         out = []
-        marker = f"{kind}:"
+        # Anchor on the structured diagnostic prefix to avoid false positives from
+        # goal text that happens to contain the words 'error' or 'warning'.
+        marker = re.compile(rf":\s*{kind}:\s*", re.IGNORECASE)
         for line in text.splitlines():
-            if marker in line.lower():
+            if marker.search(line):
                 out.append(line.strip())
         return out
 

@@ -27,7 +27,8 @@
         "targets": ["nsis"],
         "icon": ["icons/icon.png", "icons/icon.ico"],
         "resources": [
-            "resources/leanforge-mcp-backend.exe"],
+            "resources/leanforge-mcp-backend.exe",
+            "resources/.env"],
         "windows": {
             "webviewInstallMode": {
                 "type": "skip"
@@ -40,3 +41,4 @@
     },
     "plugins": {}
 }
+

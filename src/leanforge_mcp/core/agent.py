@@ -145,6 +145,11 @@ async def run_subagent(
         except Exception as exc:
             logger.warning("Subagent %d LLM error at turn %d: %s", agent_index, turn, exc)
             last_error = f"LLM error: {exc}"
+            if on_attempt:
+                await on_attempt(
+                    agent_index, turn, source, f"LLM_ERROR: {exc}", model_used, False
+                )
+            await llm.maybe_escalate(turn)
             continue
 
         model_used = llm.current_model
@@ -170,6 +175,9 @@ async def run_subagent(
             last_error = (
                 "Could not parse your response. Use the <<<REPLACE...REPLACE>>> format exactly."
             )
+            if on_attempt:
+                await on_attempt(agent_index, turn, source, "PARSE_ERROR", model_used, False)
+            await llm.maybe_escalate(turn)
             continue
 
         old_text = replace_match.group(1)
@@ -181,6 +189,9 @@ async def run_subagent(
                 "The text you tried to replace was not found (or appeared more than once). "
                 "Copy the text to replace verbatim from the file."
             )
+            if on_attempt:
+                await on_attempt(agent_index, turn, source, "EDIT_NOT_FOUND", model_used, False)
+            await llm.maybe_escalate(turn)
             continue
 
         # Tamper guard: full-signature hash, catches multi-line statement edits
