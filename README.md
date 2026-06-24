@@ -119,7 +119,8 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | All config options and environment variables |
 | [docs/TOOLS.md](docs/TOOLS.md) | Full tool reference with parameters and examples |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Proof loop, tier escalation, job lifecycle, SQLite schema |
-| [docs/LEAN_PRIMER.md](docs/LEAN_PRIMER.md) | Lean 4 intro for engineers unfamiliar with proof assistants |
+| [docs/LEAN.md](docs/LEAN.md) | Lean 4 language reference, tactic guide, bibliography, link collection |
+| [docs/LEAN_PRIMER.md](docs/LEAN_PRIMER.md) | Quick Lean 4 intro for engineers (short version) |
 | [docs/BENCHMARK_RESULTS.md](docs/BENCHMARK_RESULTS.md) | MiniF2F, PutnamBench, Erdős results |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Contributing, dev setup, test commands |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common errors and fixes |

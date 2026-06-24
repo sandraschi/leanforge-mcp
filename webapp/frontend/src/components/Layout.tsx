@@ -4,6 +4,7 @@ const links = [
   { to: "/", label: "Dashboard" },
   { to: "/problems", label: "Problems" },
   { to: "/submit", label: "New Theorem" },
+  { to: "/help", label: "Help" },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
