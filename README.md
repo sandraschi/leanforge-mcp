@@ -1,5 +1,13 @@
 # leanforge-mcp
 
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![FastMCP](https://img.shields.io/badge/FastMCP-3.2%2B-blueviolet)](https://github.com/jlowin/fastmcp)
+[![Lean 4](https://img.shields.io/badge/Lean-4-orange?logo=lean&logoColor=white)](https://lean-lang.org/)
+[![Mathlib](https://img.shields.io/badge/Mathlib-4-orange)](https://leanprover-community.github.io/mathlib4_docs/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Status: Phase A](https://img.shields.io/badge/status-Phase%20A%20complete-yellow)](docs/ASSESSMENT_2026-06-24.md)
+[![AlphaProof Nexus](https://img.shields.io/badge/inspired%20by-AlphaProof%20Nexus-informational)](https://arxiv.org/abs/2605.22763)
+
 An MCP server that exposes a **formal mathematical proof search pipeline** to any MCP-capable agent or IDE. Feed it a theorem statement in Lean 4; it runs an agentic compile-feedback loop — LLM proposes, Lean compiler judges — until a machine-verified proof emerges or the budget runs out.
 
 Inspired by DeepMind's [AlphaProof Nexus](https://arxiv.org/abs/2605.22763) (May 2026). Architecture is deliberately minimal: Agent A from that paper — independent subagents, no shared state, compiler feedback as the only oracle.
