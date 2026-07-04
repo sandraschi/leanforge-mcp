@@ -1,7 +1,7 @@
 # leanforge-mcp
 
-[![Python](https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![FastMCP](https://img.shields.io/badge/FastMCP-3.2%2B-blueviolet)](https://github.com/jlowin/fastmcp)
+[![Python](https://img.shields.io/badge/python-3.12%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![FastMCP](https://img.shields.io/badge/FastMCP-3.4%2B-blueviolet)](https://github.com/jlowin/fastmcp)
 [![Lean 4](https://img.shields.io/badge/Lean-4-orange)](https://lean-lang.org/)
 [![Mathlib](https://img.shields.io/badge/Mathlib-4-orange)](https://leanprover-community.github.io/mathlib4_docs/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -9,6 +9,8 @@
 [![AlphaProof Nexus](https://img.shields.io/badge/inspired%20by-AlphaProof%20Nexus-informational)](https://arxiv.org/abs/2605.22763)
 
 MCP server for AI-driven formal proof search in Lean 4. Submit a theorem with `sorry`; get back a machine-verified proof. Implements Agent A from [AlphaProof Nexus](https://arxiv.org/abs/2605.22763) (DeepMind, May 2026).
+
+**Stack:** Python 3.12+ . FastMCP 3.4+ . FastAPI . React/Vite . Tailwind . Lean 4 / Mathlib
 
 ---
 
