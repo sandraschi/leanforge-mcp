@@ -5,7 +5,7 @@ Based on AlphaProof Nexus (arXiv:2605.22763, DeepMind May 2026).
 
 ## Architecture
 
-leanforge-mcp is a FastMCP 3.2 server. On startup, a lifespan context manager
+leanforge-mcp is a FastMCP 3.4 server. On startup, a lifespan context manager
 creates three shared components: JobManager (SQLite persistence), LeanClient
 (wraps `lake env lean` for Mathlib-aware compilation), and Runner (orchestrates
 parallel proof search). These are stored in FastMCP lifespan context and
@@ -157,6 +157,10 @@ scripts/
   smoke_test.py      standalone validation, run before anything else
 tests/
   test_pipeline.py   pure Python pytest, no Lean needed
+docs/
+  ALPHAPROOF_NEXUS.md  AlphaProof Nexus paper explained (plain language)
+  LEAN.md              Lean 4 language reference, tactic guide, bibliography
+  LEAN_PRIMER.md       Quick Lean 4 intro for engineers
 
 ## One-time setup required
 
