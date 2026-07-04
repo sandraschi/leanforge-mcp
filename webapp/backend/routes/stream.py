@@ -22,6 +22,17 @@ async def job_stream(request: Request, job_id: str):
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=404, content={"error": "Job not found."})
 
+    headers = {
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+    }
+
+    if job.status in ("complete", "failed", "cancelled"):
+        async def early_generator():
+            yield f"data: {json.dumps({'type': 'done', 'status': job.status})}\n\n"
+        return StreamingResponse(early_generator(), media_type="text/event-stream", headers=headers)
+
     queue = event_bus.subscribe(job_id)
 
     async def event_generator():
@@ -30,13 +41,15 @@ async def job_stream(request: Request, job_id: str):
                 try:
                     event = await asyncio.wait_for(queue.get(), timeout=15.0)
                     yield f"data: {json.dumps(event)}\n\n"
+                    if event.get("type") == "job_status" and event.get("status") in (
+                        "complete",
+                        "failed",
+                        "cancelled",
+                    ):
+                        yield f"data: {json.dumps({'type': 'done', 'status': event['status']})}\n\n"
+                        break
                 except asyncio.TimeoutError:
                     yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
-
-                job = await runner.jobs.get_job(job_id)
-                if job and job.status in ("complete", "failed", "cancelled"):
-                    yield f"data: {json.dumps({'type': 'done', 'status': job.status})}\n\n"
-                    break
         except asyncio.CancelledError:
             pass
         finally:
@@ -45,9 +58,5 @@ async def job_stream(request: Request, job_id: str):
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
+        headers=headers,
     )

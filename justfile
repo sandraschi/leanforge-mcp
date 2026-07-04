@@ -28,6 +28,10 @@ web-dev:
 lint:
     uv run ruff check src/
 
+# Format
+fmt:
+    uv run ruff format src/
+
 # Format check
 format-check:
     uv run ruff format --check src/

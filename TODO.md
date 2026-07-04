@@ -1,4 +1,4 @@
-# leanforge-mcp — TODO for Cursor
+# leanforge-mcp -- TODO for Cursor
 
 Generated: 2026-06-10. Pick up from here after the smoke test passes.
 
@@ -16,7 +16,7 @@ A full-stack webapp was added in `webapp/`:
 
 ## MANUAL STEPS FIRST (human, not Cursor)
 
-These cannot be automated — do them before asking Cursor to do anything.
+These cannot be automated -- do them before asking Cursor to do anything.
 
 ### 0. Create the git repo and push to GitHub (DO THIS FIRST per GIT_REPOSITORY_SAFETY.md)
 
@@ -86,7 +86,7 @@ This only needs to be done once. The workspace persists across server restarts.
 ```
 
 Expected: all 8 tests pass. These test agent.py logic only (statement hashing, edit
-application) — no LLM or Lean involved.
+application) -- no LLM or Lean involved.
 
 ### 5. Run smoke test (needs Lean workspace from step 3)
 
@@ -95,7 +95,7 @@ application) — no LLM or Lean involved.
 ```
 
 Tests 1-2 and 6 pass without Lean. Tests 3-5 need the workspace.
-**The smoke test is the gate** — don't proceed to Cursor tasks until it passes.
+**The smoke test is the gate** -- don't proceed to Cursor tasks until it passes.
 
 ---
 
@@ -103,34 +103,34 @@ Tests 1-2 and 6 pass without Lean. Tests 3-5 need the workspace.
 
 These are assumptions that may need tuning once smoke test runs:
 
-### lean_client.py — exit code semantics
+### lean_client.py -- exit code semantics
 
 Lean 4 may return exit code 0 even on tactic failures, signalling errors only via
 diagnostic output. Current code treats non-zero exit OR presence of "error:" lines
 as failure. If the smoke test shows `success=True` on a proof with errors, fix
-`_extract_errors()` in `lean_client.py` — look at `raw_stdout` and `raw_stderr` from
+`_extract_errors()` in `lean_client.py` -- look at `raw_stdout` and `raw_stderr` from
 the smoke test output and adjust the detection logic accordingly.
 
-### lean_client.py — stdout vs stderr
+### lean_client.py -- stdout vs stderr
 
 Current code combines `stdout + stderr` for error extraction. Lean 4 emits
 diagnostics to stdout in the format `file:line:col: error: ...`. If extraction
 misses errors, check which stream they appear in from the smoke test raw output.
 
-### server.py — FastMCP 3.x lifespan import — RESOLVED 2026-06-10
+### server.py -- FastMCP 3.x lifespan import -- RESOLVED 2026-06-10
 
 Verified against installed fastmcp in .venv: `fastmcp.server.lifespan.lifespan`
 exists and works as used. No fallback needed.
 
 HOWEVER: the Context attribute for reading lifespan state is
-`ctx.lifespan_context` (property), NOT `ctx.lifespan`. This was a P0 bug —
+`ctx.lifespan_context` (property), NOT `ctx.lifespan`. This was a P0 bug --
 every tool call would AttributeError. FIXED 2026-06-10: all tools now use
 `get_runner(ctx)` from core/runner.py, which reads `ctx.lifespan_context`.
 See docs/ASSESSMENT_2026-06-10.md P0-1 for the mounted-child fallback nuance.
 
-### server.py — mount() with no prefix — RESOLVED 2026-06-10
+### server.py -- mount() with no prefix -- RESOLVED 2026-06-10
 
-Verified against installed fastmcp source: `mount(server, namespace=None)` —
+Verified against installed fastmcp source: `mount(server, namespace=None)` --
 with no namespace, tool names are preserved unprefixed (`submit_theorem`, not
 `submit_submit_theorem`). No change needed; `import_server` fallback obsolete.
 
@@ -162,7 +162,7 @@ File: `scripts\validate_miniF2F.py` (create)
 2. Create a script that:
    - Takes the first 5 `.lean` files from `miniF2F\lean4\valid\`
    - Submits each via `LeanClient.compile()` directly (not MCP) to confirm they
-     compile as-is (the files have proofs — they should all return `proven=True`)
+     compile as-is (the files have proofs -- they should all return `proven=True`)
    - Then tests the sorry-detection: strip the proof body and replace with `sorry`,
      recompile, confirm `has_sorry=True` and `proven=False`
 
@@ -372,11 +372,11 @@ docs\
 
 ### Do not
 
-- Do not call `lean` directly — always `lake env lean <file>` via `LeanClient`
-- Do not hardcode paths — always read from `Config` (loaded from `config.toml`)
-- Do not block the FastMCP event loop — all Lean and LLM calls are async
-- Do not call `asyncio.run()` inside async code — the server runs in one loop
-- Do not modify theorem statements in agent edits — the statement hash check
+- Do not call `lean` directly -- always `lake env lean <file>` via `LeanClient`
+- Do not hardcode paths -- always read from `Config` (loaded from `config.toml`)
+- Do not block the FastMCP event loop -- all Lean and LLM calls are async
+- Do not call `asyncio.run()` inside async code -- the server runs in one loop
+- Do not modify theorem statements in agent edits -- the statement hash check
   in `agent.py` will reject them; this is intentional
-- Do not write to `workspace\` directly from tools — go through `Runner.start_job()`
-- Do not pip install — use `uv sync` and `uv run`
+- Do not write to `workspace\` directly from tools -- go through `Runner.start_job()`
+- Do not pip install -- use `uv sync` and `uv run`

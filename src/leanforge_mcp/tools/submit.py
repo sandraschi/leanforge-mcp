@@ -24,7 +24,7 @@ class SubmitTheoremInput(BaseModel):
     statement: str = Field(
         description=(
             "The theorem to prove, as a Lean 4 proposition (the part after the colon). "
-            "Example: '∀ n : ℕ, 2 * ∑ i ∈ Finset.range (n+1), i = n * (n+1)'. "
+            "Example: '∀ n : N, 2 * ∑ i ∈ Finset.range (n+1), i = n * (n+1)'. "
             "Will be wrapped in a Lean stub with sorry."
         )
     )
@@ -63,13 +63,23 @@ class SubmitLeanFileInput(BaseModel):
 
 @router.tool(
     description=(
-        "Submit a theorem for formal proof search. Returns a job_id immediately — "
+        "Submit a theorem for formal proof search. Returns a job_id immediately -- "
         "use get_proof_status to poll. The server runs parallel agents looping "
         "LLM-propose -> Lean-compile -> error-feedback until proven or budget exhausted."
     ),
 )
 async def submit_theorem(input: SubmitTheoremInput, ctx: Context) -> dict:
     runner = get_runner(ctx)
+    if runner.lean.setup_in_progress:
+        return {
+            "status": "pending",
+            "message": f"Leanforge setup running: {runner.lean.setup_status}. Try again shortly.",
+        }
+    if runner.lean.setup_error:
+        return {
+            "status": "error",
+            "message": f"Leanforge setup failed: {runner.lean.setup_error}. Fix installation files.",
+        }
 
     lean_source = input.lean_stub or LEAN_STUB_TEMPLATE.format(
         description=input.statement[:100],
@@ -110,6 +120,16 @@ async def submit_lean_file(input: SubmitLeanFileInput, ctx: Context) -> dict:
         }
 
     runner = get_runner(ctx)
+    if runner.lean.setup_in_progress:
+        return {
+            "status": "pending",
+            "message": f"Leanforge setup running: {runner.lean.setup_status}. Try again shortly.",
+        }
+    if runner.lean.setup_error:
+        return {
+            "status": "error",
+            "message": f"Leanforge setup failed: {runner.lean.setup_error}. Fix installation files.",
+        }
     job_id = await runner.start_job(
         lean_source=input.lean_source,
         description=input.description,

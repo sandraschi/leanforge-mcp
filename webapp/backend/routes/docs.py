@@ -12,7 +12,7 @@ router = APIRouter(tags=["docs"])
 REPO_ROOT = Path(__file__).parent.parent.parent.parent
 DOCS_DIR = REPO_ROOT / "docs"
 
-# name → path relative to repo root. Explicit whitelist — no traversal possible.
+# name → path relative to repo root. Explicit whitelist -- no traversal possible.
 ALLOWED_DOCS: dict[str, Path] = {
     "INSTALL":               REPO_ROOT / "INSTALL.md",
     "LEAN":                  DOCS_DIR / "LEAN.md",

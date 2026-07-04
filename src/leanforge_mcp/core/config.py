@@ -1,4 +1,4 @@
-"""Config loader — reads config.toml into typed dataclasses."""
+"""Config loader -- reads config.toml into typed dataclasses."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ class LeanConfig:
     # Lake project dir with Mathlib dependency + cached oleans (one-time setup).
     workspace_dir: str = r"D:\Dev\repos\leanforge-mcp\workspace\leanforge_workspace"
     compile_timeout: int = 120
-    # Cap concurrent Lean processes — each loads Mathlib, uses GBs of RAM.
+    # Cap concurrent Lean processes -- each loads Mathlib, uses GBs of RAM.
     max_concurrent_compiles: int = 4
     retain_workspace: bool = False
 

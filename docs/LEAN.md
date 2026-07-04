@@ -24,18 +24,18 @@ Mathlib, the proof pipeline, and the literature behind the approach.
 
 Lean 4 is simultaneously a functional programming language and a proof assistant.
 In Lean, **a proof is a program** and **a theorem is a type**. This is the
-Curry–Howard correspondence: logical propositions correspond to types, and proofs
+Curry-Howard correspondence: logical propositions correspond to types, and proofs
 correspond to programs that inhabit those types.
 
 Proving `n + 0 = n` means constructing a term of type `n + 0 = n`. The Lean kernel
 checks this term is well-typed against the axioms of dependent type theory. If the
-kernel accepts it, the proof is correct — not approximately correct, not "convincing
+kernel accepts it, the proof is correct -- not approximately correct, not "convincing
 to a reviewer", but correct in the mathematical sense. No reviewer, no peer review,
 no subtle gap possible.
 
 This is why the AlphaProof Nexus approach works: LLMs are now capable enough that
 the compile-feedback loop alone can drive proof search to research-level difficulty.
-The compiler eliminates hallucination at the proof level — a wrong proof simply fails
+The compiler eliminates hallucination at the proof level -- a wrong proof simply fails
 to compile.
 
 ---
@@ -107,7 +107,7 @@ theorem sum_formula (n : ℕ) : 2 * ∑ i ∈ Finset.range (n + 1), i = n * (n +
 | `ring_nf` | Normalise ring expressions without closing the goal. Use before `linarith`. |
 | `linarith` | Linear arithmetic over ordered fields/rings: `x + 1 > x`, `2*x = x + x`. Closes goal or raises a contradiction. |
 | `nlinarith` | Nonlinear arithmetic. Slower than `linarith`, needed for `x^2 ≥ 0` style goals. |
-| `omega` | Exact integer and natural number arithmetic. Decision procedure — either closes or fails immediately. |
+| `omega` | Exact integer and natural number arithmetic. Decision procedure -- either closes or fails immediately. |
 | `norm_num` | Numeric goals: `2 + 2 = 4`, `7 ∣ 49`. Use for concrete computations. |
 | `positivity` | Prove `0 ≤ e` or `0 < e` for expressions built from nonneg components. |
 | `field_simp` | Simplify field expressions, clearing denominators. Pair with `ring`. |
@@ -116,7 +116,7 @@ theorem sum_formula (n : ℕ) : 2 * ∑ i ∈ Finset.range (n + 1), i = n * (n +
 
 | Tactic | When to use |
 |--------|-------------|
-| `simp` | Rewrite using a large database of lemmas tagged `@[simp]`. Best first move on simple goals. Can loop — use `simp only [...]` to control. |
+| `simp` | Rewrite using a large database of lemmas tagged `@[simp]`. Best first move on simple goals. Can loop -- use `simp only [...]` to control. |
 | `simp only [h₁, h₂]` | `simp` restricted to the given lemmas. Predictable, faster, preferred for non-trivial goals. |
 | `simp [*]` | `simp` plus all local hypotheses. |
 | `norm_cast` | Normalise coercions between `ℕ`, `ℤ`, `ℝ`, etc. |
@@ -186,7 +186,7 @@ error: tactic 'ring' failed, no goals
 error: unknown identifier 'Nat.add_comm'
 ```
 → Wrong lemma name. Use `get_mathlib_search "commutativity of addition"` to find it.
-The correct name is likely `add_comm` or `Nat.add_comm` — check with `#check`.
+The correct name is likely `add_comm` or `Nat.add_comm` -- check with `#check`.
 
 ```
 error: type mismatch
@@ -207,7 +207,7 @@ rewrite the sum using `Finset.sum_range_succ` first.
 ```
 warning: declaration uses 'sorry'
 ```
-→ Not an error — proof incomplete. The file still compiles. `proven = false`.
+→ Not an error -- proof incomplete. The file still compiles. `proven = false`.
 
 ```
 error: function expected at
@@ -272,7 +272,7 @@ theorem infinite_primes : ∀ n : ℕ, ∃ p, n ≤ p ∧ Nat.Prime p :=
   fun n => Nat.exists_infinite_primes n
 ```
 
-This one is a single-line proof — Mathlib already has `Nat.exists_infinite_primes`.
+This one is a single-line proof -- Mathlib already has `Nat.exists_infinite_primes`.
 `get_mathlib_search` would surface it. Shows why searching Mathlib first matters.
 
 ### Induction with a helper lemma
@@ -296,7 +296,7 @@ theorem gauss (n : ℕ) : ∑ i ∈ Finset.range (n + 1), i = n * (n + 1) / 2 :=
 
 ## Import strategy
 
-`import Mathlib` imports all of Mathlib (~150k theorems). It works but costs 30–60s
+`import Mathlib` imports all of Mathlib (~150k theorems). It works but costs 30-60s
 per `lake env lean` invocation even with cached oleans. For faster iteration on
 focused problems, use targeted imports:
 
@@ -331,7 +331,7 @@ leanforge-mcp always invokes `lake env lean <tmpfile>` from inside the workspace
 directory. The `lake env` prefix ensures the compiler inherits the full Lake project
 environment (Mathlib on the search path, correct toolchain).
 
-`lake env lean` without a project is useless for Mathlib — the import will fail.
+`lake env lean` without a project is useless for Mathlib -- the import will fail.
 This is why the one-time workspace setup is a hard prerequisite.
 
 ---
@@ -355,12 +355,12 @@ Use with leanforge-mcp: `submit_lean_file` each problem file directly.
 
 - Repo: [trishullab/PutnamBench](https://github.com/trishullab/PutnamBench)
 - Baseline: DeepSeek-Prover-V2 671B solves 49/658 (7.4%)
-- Target for leanforge-mcp tier-1: match the 7B baseline (~3–5%)
+- Target for leanforge-mcp tier-1: match the 7B baseline (~3-5%)
 
 ### AlphaProof Nexus unsolved set
 
 353 Erdős problems attempted by the AlphaProof Nexus system. 344 remain open.
-All pre-formalized as Lean 4 stubs — the hardest part (stating the theorem correctly)
+All pre-formalized as Lean 4 stubs -- the hardest part (stating the theorem correctly)
 is already done.
 
 - Repo: [google-deepmind/alphaproof-nexus-results](https://github.com/google-deepmind/alphaproof-nexus-results)
@@ -384,15 +384,15 @@ of the statement before proof search. The formalization step is often the harder
 **AlphaProof Nexus (direct inspiration)**
 
 - Google DeepMind (2026). **AlphaProof Nexus: Scaling AI-Assisted Formal Mathematics.** [arXiv:2605.22763](https://arxiv.org/abs/2605.22763)
-  — Introduces the Agent A architecture (independent subagents, compiler oracle) implemented here.
+  -- Introduces the Agent A architecture (independent subagents, compiler oracle) implemented here.
 
 **Prover models**
 
 - Xin, H., et al. (2025). **DeepSeek-Prover-V2: Advancing Formal Mathematical Reasoning via Reinforcement Learning for Subgoal Decomposition.** [arXiv:2504.21801](https://arxiv.org/abs/2504.21801)
-  — The open-weight model used as leanforge-mcp's tier-1 and tier-2 backbone.
+  -- The open-weight model used as leanforge-mcp's tier-1 and tier-2 backbone.
 
 - Han, J. M., et al. (2022). **Proof Artifact Co-Training (PACT).** [arXiv:2102.06203](https://arxiv.org/abs/2102.06203)
-  — Early work on training language models on Lean proof artifacts.
+  -- Early work on training language models on Lean proof artifacts.
 
 - Polu, S., & Han, J. M. (2022). **Formal Mathematics Statement Curriculum Learning.** [arXiv:2202.01344](https://arxiv.org/abs/2202.01344)
 
@@ -409,7 +409,7 @@ of the statement before proof search. The formalization step is often the harder
 - Avigad, J., & Massot, P. (2024). **Mathematics in Lean.** [leanprover-community.github.io/mathematics_in_lean](https://leanprover-community.github.io/mathematics_in_lean/)
 
 - Howard, W. A. (1980). **The formulae-as-types notion of construction.** In Hindley & Seldin (eds.), *To H. B. Curry: Essays on Combinatory Logic, Lambda Calculus and Formalism.* Academic Press.
-  — Original Curry–Howard correspondence paper.
+  -- Original Curry-Howard correspondence paper.
 
 ---
 

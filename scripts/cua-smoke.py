@@ -3,7 +3,7 @@
 
 CUA_SMOKE_VERSION = 2
 If this file differs from templates/tauri-native/scripts/cua-smoke.py in
-mcp-central-docs, copy the template over — version number will have changed.
+mcp-central-docs, copy the template over -- version number will have changed.
 
 Usage:
     python scripts/cua-smoke.py
@@ -285,7 +285,7 @@ def cua_click(window_handle: int, x: int, y: int):
 # ── Helpers ───────────────────────────────────────────────────────────
 
 class PhaseFailed(Exception):
-    """Non-fatal phase failure — script continues to uninstall."""
+    """Non-fatal phase failure -- script continues to uninstall."""
 
 
 def fatal(msg: str):
@@ -436,7 +436,7 @@ def verify_webview_bridge(output_dir: str):
     elif text:
         os.makedirs(output_dir, exist_ok=True)
         log(f"WebView OCR text: {text[:200]}")
-        phase_fail(f"WebView bridge not OK — likely API_BASE/CSP/CORS (expected '{BRIDGE_OK_TEXT}')")
+        phase_fail(f"WebView bridge not OK -- likely API_BASE/CSP/CORS (expected '{BRIDGE_OK_TEXT}')")
     else:
         log("WebView bridge check skipped (no OCR available)")
 
@@ -592,7 +592,7 @@ def main():
     fatal_failed = False
 
     print(f"\n{'='*50}")
-    print(f"  CUA Smoke Test — {PRODUCT_NAME}")
+    print(f"  CUA Smoke Test -- {PRODUCT_NAME}")
     print(f"{'='*50}\n")
 
     for is_fatal, name, fn in phases:
@@ -617,7 +617,7 @@ def main():
     if failed:
         print(f"  {failed} phase(s) FAILED")
     if fatal_failed:
-        print(f"  FATAL phase failure — see above")
+        print(f"  FATAL phase failure -- see above")
         sys.exit(1)
     print(f"  ALL PHASES PASSED")
     print(f"{'='*50}\n")

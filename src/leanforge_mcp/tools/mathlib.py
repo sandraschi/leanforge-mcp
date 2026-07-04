@@ -1,4 +1,4 @@
-"""MCP tool: get_mathlib_search — natural language → Mathlib theorem names"""
+"""MCP tool: get_mathlib_search -- natural language → Mathlib theorem names"""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ LEANSEARCH_API = "https://leansearch.net/api/search"
     description=(
         "Search Mathlib4 for theorems matching a natural language query. "
         "Returns theorem names and type signatures useful for building proofs. "
-        "Use this when stuck — find the right Mathlib lemma name and pass it "
+        "Use this when stuck -- find the right Mathlib lemma name and pass it "
         "as a hint to submit_theorem."
     ),
     annotations={"readOnlyHint": True},

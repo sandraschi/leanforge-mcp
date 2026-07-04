@@ -2,7 +2,7 @@
 
 ## Overview
 
-leanforge-mcp implements Agent A from the AlphaProof Nexus paper (arXiv:2605.22763) as an MCP server. This is the simplest agent configuration — N independent subagents, no shared state, compiler feedback as the only oracle — and it is sufficient to solve research-level problems given enough compute budget.
+leanforge-mcp implements Agent A from the AlphaProof Nexus paper (arXiv:2605.22763) as an MCP server. This is the simplest agent configuration -- N independent subagents, no shared state, compiler feedback as the only oracle -- and it is sufficient to solve research-level problems given enough compute budget.
 
 ## The proof loop in detail
 
@@ -71,8 +71,8 @@ Lean compiler error from last attempt:
 Each subagent tracks its own tier. Escalation is irreversible within a job:
 
 ```
-turns 0–19:   tier_1 (Ollama local, free)
-turns 20–59:  tier_2 (DeepSeek V4 Flash API)
+turns 0-19:   tier_1 (Ollama local, free)
+turns 20-59:  tier_2 (DeepSeek V4 Flash API)
 turns 60+:    tier_3 (Claude Fable 5 API)
 ```
 
@@ -111,7 +111,7 @@ CREATE TABLE attempts (
 );
 ```
 
-## Lean workspace — one-time setup
+## Lean workspace -- one-time setup
 
 A bare `lean` invocation cannot resolve `import Mathlib`. Every non-trivial Lean
 file must live inside a Lake project with Mathlib as a dependency and its precompiled
@@ -137,16 +137,16 @@ a trivial smoke compile.
 
 ## Mathlib search
 
-`get_mathlib_search` wraps the [LeanSearch API](https://leansearch.net) — natural language → Mathlib theorem names. Useful when stuck: find the right lemma name, pass as a hint to the next submit.
+`get_mathlib_search` wraps the [LeanSearch API](https://leansearch.net) -- natural language → Mathlib theorem names. Useful when stuck: find the right lemma name, pass as a hint to the next submit.
 
 ## Performance on Goliath
 
 | Problem tier | Typical turns | Wall time | Cost (tier 1) |
 |---|---|---|---|
-| Sanity (arithmetic) | 1–3 | 5–15s | $0 local |
-| MiniF2F easy | 5–20 | 1–3 min | $0 local |
-| MiniF2F hard | 20–80 | 5–20 min | ~$0.01 tier 2 |
-| PutnamBench | 50–200 | 20–60 min | ~$0.05–0.20 tier 2/3 |
-| Open Erdős problem | 100–1000+ | hours | ~$1–10 tier 3 |
+| Sanity (arithmetic) | 1-3 | 5-15s | $0 local |
+| MiniF2F easy | 5-20 | 1-3 min | $0 local |
+| MiniF2F hard | 20-80 | 5-20 min | ~$0.01 tier 2 |
+| PutnamBench | 50-200 | 20-60 min | ~$0.05-0.20 tier 2/3 |
+| Open Erdős problem | 100-1000+ | hours | ~$1-10 tier 3 |
 
 With 4 parallel agents on 24 cores, wall time scales roughly as 1/N.

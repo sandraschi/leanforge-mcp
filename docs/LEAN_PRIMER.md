@@ -8,7 +8,7 @@ Lean 4 to debug the pipeline and read compiler errors.
 Lean 4 is simultaneously a functional programming language and a proof assistant.
 In Lean, **a proof is a program** and **a theorem is a type**. Proving `2 + 2 = 4`
 means constructing a term of type `2 + 2 = 4`. The compiler checks this is
-well-typed — if it is, the proof is correct. No reviewer needed.
+well-typed -- if it is, the proof is correct. No reviewer needed.
 
 ## The `sorry` placeholder
 
@@ -74,7 +74,7 @@ error: type mismatch
 ```
 warning: declaration uses 'sorry'
 ```
-→ Not an error — proof incomplete but compiles. Still need to fill sorry.
+→ Not an error -- proof incomplete but compiles. Still need to fill sorry.
 
 ## A complete proof
 
@@ -93,20 +93,20 @@ theorem sum_formula (n : ℕ) : 2 * ∑ i ∈ Finset.range (n + 1), i = n * (n +
 ```
 
 Step by step:
-1. `induction n` — base case (n=0) and inductive step (n → n+1)
-2. `| zero => simp` — base case handled by simplification
-3. `| succ n ih =>` — `ih` is the inductive hypothesis
-4. `rw [Finset.sum_range_succ]` — unfold sum by one step
-5. `ring_nf` — normalise ring expressions
-6. `linarith` — close with linear arithmetic using `ih`
+1. `induction n` -- base case (n=0) and inductive step (n → n+1)
+2. `| zero => simp` -- base case handled by simplification
+3. `| succ n ih =>` -- `ih` is the inductive hypothesis
+4. `rw [Finset.sum_range_succ]` -- unfold sum by one step
+5. `ring_nf` -- normalise ring expressions
+6. `linarith` -- close with linear arithmetic using `ih`
 
 ## Mathlib naming conventions
 
-- `Nat.` — natural numbers
-- `Int.` — integers
-- `Real.` — reals
-- `Finset.` — finite sets
-- `List.` — lists
+- `Nat.` -- natural numbers
+- `Int.` -- integers
+- `Real.` -- reals
+- `Finset.` -- finite sets
+- `List.` -- lists
 
 Use `get_mathlib_search` or https://leansearch.net to find theorem names.
 
@@ -130,8 +130,8 @@ lake build
 ```
 
 Open in VSCode with the Lean 4 extension. The **InfoView** panel shows live proof
-state — goals, hypotheses, errors. Essential for understanding compiler output.
+state -- goals, hypotheses, errors. Essential for understanding compiler output.
 
 ## Online playground
 
-No install needed: https://live.lean-lang.org — full Lean 4 + Mathlib in browser.
+No install needed: https://live.lean-lang.org -- full Lean 4 + Mathlib in browser.

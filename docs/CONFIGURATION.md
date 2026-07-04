@@ -1,7 +1,7 @@
 # Configuration
 
 leanforge-mcp reads `config.toml` from the repo root. Copy `config.example.toml`
-to get started. API keys are never stored in `config.toml` — pass them as
+to get started. API keys are never stored in `config.toml` -- pass them as
 environment variables (via Claude Desktop's `env` block or your shell).
 
 ---
@@ -37,43 +37,43 @@ environment variables (via Claude Desktop's `env` block or your shell).
 
 ---
 
-## [llm.tier1] — local Ollama (free)
+## [llm.tier1] -- local Ollama (free)
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `provider` | `ollama` | — |
+| `provider` | `ollama` | -- |
 | `model` | `deepseek-prover-v2:7b` | Pull with `ollama pull deepseek-prover-v2:7b`. |
-| `base_url` | `http://localhost:11434/v1` | The `/v1` suffix is required — Ollama serves the OpenAI-compatible API there. |
-| `max_tokens` | `2048` | — |
-| `temperature` | `0.7` | — |
+| `base_url` | `http://localhost:11434/v1` | The `/v1` suffix is required -- Ollama serves the OpenAI-compatible API there. |
+| `max_tokens` | `2048` | -- |
+| `temperature` | `0.7` | -- |
 
 ---
 
-## [llm.tier2] — DeepSeek API
+## [llm.tier2] -- DeepSeek API
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `provider` | `openai_compat` | Uses the OpenAI-compatible client. |
 | `model` | `deepseek-chat` | DeepSeek V4 Flash. Check [docs](https://platform.deepseek.com/api-docs) for the current model name. |
-| `base_url` | `https://api.deepseek.com/v1` | — |
+| `base_url` | `https://api.deepseek.com/v1` | -- |
 | `api_key_env` | `DEEPSEEK_API_KEY` | Name of the env var holding your DeepSeek API key. |
-| `max_tokens` | `4096` | — |
+| `max_tokens` | `4096` | -- |
 
 ---
 
-## [llm.tier3] — Anthropic (hard problems only)
+## [llm.tier3] -- Anthropic (hard problems only)
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `provider` | `anthropic` | Uses the native Anthropic client. |
 | `model` | `claude-opus-4-8` | Update to whichever current model is strongest. |
 | `api_key_env` | `ANTHROPIC_API_KEY` | Name of the env var holding your Anthropic API key. |
-| `max_tokens` | `8192` | — |
-| `temperature` | `1.0` | Higher temperature for tier-3 — diversity of proof strategies matters at this stage. |
+| `max_tokens` | `8192` | -- |
+| `temperature` | `1.0` | Higher temperature for tier-3 -- diversity of proof strategies matters at this stage. |
 
 > **Cost warning:** Tier-3 is expensive. At default settings (8192 tokens, up to 40
-> tier-3 turns per agent × 4 agents), a hard job can cost $5–20. Token/cost
-> accounting is on the roadmap (P2-3) — do not run overnight batches until it lands.
+> tier-3 turns per agent × 4 agents), a hard job can cost $5-20. Token/cost
+> accounting is on the roadmap (P2-3) -- do not run overnight batches until it lands.
 
 ---
 

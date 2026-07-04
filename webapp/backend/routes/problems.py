@@ -29,12 +29,6 @@ CREATE TABLE IF NOT EXISTS problems (
 """
 
 
-async def ensure_problems_table(request: Request):
-    db_path = request.app.state.config.database.path
-    async with aiosqlite.connect(db_path) as db:
-        await db.executescript(PROBLEMS_SCHEMA)
-        await db.commit()
-
 
 class ProblemCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
@@ -62,7 +56,6 @@ def _now():
 
 @router.get("")
 async def list_problems(request: Request, source: str | None = None, limit: int = 50):
-    await ensure_problems_table(request)
     db_path = request.app.state.config.database.path
     async with aiosqlite.connect(db_path) as db:
         db.row_factory = aiosqlite.Row
@@ -86,7 +79,6 @@ async def list_problems(request: Request, source: str | None = None, limit: int 
 
 @router.get("/{problem_id}")
 async def get_problem(request: Request, problem_id: str):
-    await ensure_problems_table(request)
     db_path = request.app.state.config.database.path
     async with aiosqlite.connect(db_path) as db:
         db.row_factory = aiosqlite.Row
@@ -101,7 +93,6 @@ async def get_problem(request: Request, problem_id: str):
 
 @router.post("", status_code=201)
 async def create_problem(request: Request, body: ProblemCreate):
-    await ensure_problems_table(request)
     pid = str(uuid.uuid4())
     now = _now()
     db_path = request.app.state.config.database.path
@@ -119,7 +110,6 @@ async def create_problem(request: Request, body: ProblemCreate):
 
 @router.put("/{problem_id}")
 async def update_problem(request: Request, problem_id: str, body: ProblemUpdate):
-    await ensure_problems_table(request)
     now = _now()
     fields = []
     values = []
@@ -144,7 +134,6 @@ async def update_problem(request: Request, problem_id: str, body: ProblemUpdate)
 
 @router.delete("/{problem_id}")
 async def delete_problem(request: Request, problem_id: str):
-    await ensure_problems_table(request)
     db_path = request.app.state.config.database.path
     async with aiosqlite.connect(db_path) as db:
         await db.execute("DELETE FROM problems WHERE id=?", (problem_id,))

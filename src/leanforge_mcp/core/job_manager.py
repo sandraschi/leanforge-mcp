@@ -47,6 +47,19 @@ CREATE TABLE IF NOT EXISTS attempts (
 
 CREATE INDEX IF NOT EXISTS idx_attempts_job ON attempts(job_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
+
+CREATE TABLE IF NOT EXISTS problems (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    statement TEXT NOT NULL,
+    lean_source TEXT,
+    source TEXT DEFAULT 'user',
+    difficulty TEXT DEFAULT 'medium',
+    tags TEXT DEFAULT '',
+    notes TEXT DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 
@@ -246,3 +259,15 @@ class JobManager:
                 ) as cursor:
                     rows = await cursor.fetchall()
             return [dict(r) for r in rows]
+
+    async def get_job_counts(self) -> dict[str, int]:
+        async with aiosqlite.connect(self.db_path) as db:
+            await self._configure_db(db)
+            async with db.execute(
+                "SELECT status, COUNT(*) FROM jobs GROUP BY status"
+            ) as cursor:
+                rows = await cursor.fetchall()
+            counts = {status: count for status, count in rows}
+            counts["total"] = sum(counts.values())
+            return counts
+

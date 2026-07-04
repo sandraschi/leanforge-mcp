@@ -1,4 +1,4 @@
-# CHANGELOG — leanforge-mcp
+# CHANGELOG -- leanforge-mcp
 
 All notable changes to this project will be documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
@@ -8,13 +8,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Fixed (2026-06-10, Phase A — see docs/ASSESSMENT_2026-06-10.md)
+### Fixed (2026-06-10, Phase A -- see docs/ASSESSMENT_2026-06-10.md)
 
 - **P0: `ctx.lifespan` → proper Runner retrieval.** Installed fastmcp exposes
   `ctx.lifespan_context`, not `ctx.lifespan`; every tool call raised
   AttributeError. Additionally, the lifespan-context route through mounted
   child routers is broken in the installed fastmcp (a child's empty lifespan
-  dict short-circuits the parent fallback — verified by integration test).
+  dict short-circuits the parent fallback -- verified by integration test).
   `get_runner()` now tries own lifespan dict → session request-context
   lifespan dict → process-level fallback anchored by the server lifespan
   (`set_runner_fallback`). All tools consolidated on `get_runner(ctx)`.
@@ -28,7 +28,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- `tests/test_server_integration.py` — boots the real server in-process via
+- `tests/test_server_integration.py` -- boots the real server in-process via
   the fastmcp in-memory Client: asserts unprefixed tool names after mount()
   and exercises the full get_runner path from a mounted child tool. This test
   caught the mounted-child lifespan short-circuit that code reading missed.
@@ -45,7 +45,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [0.1.0] — 2026-06-10
+## [0.1.0] -- 2026-06-10
 
 Initial scaffold. Architecture complete, compile pipeline correct, all
 components wired. Not yet validated against a live Lean + Mathlib installation.
@@ -53,72 +53,72 @@ components wired. Not yet validated against a live Lean + Mathlib installation.
 ### Added
 
 **Core pipeline**
-- `src/leanforge_mcp/core/lean_client.py` — async `LeanClient` wrapping
+- `src/leanforge_mcp/core/lean_client.py` -- async `LeanClient` wrapping
   `lake env lean <file>` inside a Mathlib Lake project workspace.
   Concurrent compile semaphore (default 4). Workspace health check on startup.
-- `src/leanforge_mcp/core/agent.py` — Agent A from AlphaProof Nexus.
+- `src/leanforge_mcp/core/agent.py` -- Agent A from AlphaProof Nexus.
   Independent subagents, LLM-propose → Lean-compile → error-feedback loop.
   Full multi-line statement tamper detection via `extract_statement()`.
   `AttemptHook` callback for SQLite persistence. Proper `asyncio.CancelledError`
   propagation.
-- `src/leanforge_mcp/core/llm_client.py` — Multi-tier async LLM client.
+- `src/leanforge_mcp/core/llm_client.py` -- Multi-tier async LLM client.
   Supports Ollama, OpenAI-compatible (DeepSeek), Anthropic. Per-subagent tier
   escalation via `__post_init__` + `maybe_escalate()`. Proper dataclass field
   hygiene (`field(init=False)`).
-- `src/leanforge_mcp/core/job_manager.py` — SQLite-backed job and attempt
+- `src/leanforge_mcp/core/job_manager.py` -- SQLite-backed job and attempt
   persistence via `aiosqlite`. Full job lifecycle (queued/running/complete/
   failed/cancelled/interrupted). Interrupted job recovery on startup.
-- `src/leanforge_mcp/core/runner.py` — `Runner` orchestrator. Fire-and-forget
+- `src/leanforge_mcp/core/runner.py` -- `Runner` orchestrator. Fire-and-forget
   `asyncio.Task` registry with `cancel()` support. Runner stored in FastMCP
   lifespan context (`ctx.lifespan["runner"]`); no module-level globals.
-- `src/leanforge_mcp/core/config.py` — TOML config loader. Typed dataclasses
+- `src/leanforge_mcp/core/config.py` -- TOML config loader. Typed dataclasses
   for `LeanConfig` (lake_path, workspace_dir, compile_timeout,
   max_concurrent_compiles), `LLMConfig` (tier1/2/3), `AgentConfig`,
   `ServerConfig`, `LoggingConfig`.
 
 **MCP tools**
-- `submit_theorem` — submit a theorem statement for proof search, returns
+- `submit_theorem` -- submit a theorem statement for proof search, returns
   job_id immediately.
-- `submit_lean_file` — submit a pre-formalized `.lean` stub with `sorry`
+- `submit_lean_file` -- submit a pre-formalized `.lean` stub with `sorry`
   placeholders.
-- `get_proof_status` — poll job; returns proven Lean file if complete.
-- `list_attempts` — inspect per-turn proof search trajectory with compiler
+- `get_proof_status` -- poll job; returns proven Lean file if complete.
+- `list_attempts` -- inspect per-turn proof search trajectory with compiler
   feedback.
-- `list_jobs` — list all jobs with status filter.
-- `cancel_job` — cancel a live proof search task.
-- `validate_lean` — raw `lake env lean` compile, no job tracking.
-- `get_mathlib_search` — natural language → Mathlib theorem names via
+- `list_jobs` -- list all jobs with status filter.
+- `cancel_job` -- cancel a live proof search task.
+- `validate_lean` -- raw `lake env lean` compile, no job tracking.
+- `get_mathlib_search` -- natural language → Mathlib theorem names via
   LeanSearch API.
 
 **Server infrastructure**
-- `src/leanforge_mcp/server.py` — FastMCP 3.2 server with `@fastmcp_lifespan`
+- `src/leanforge_mcp/server.py` -- FastMCP 3.2 server with `@fastmcp_lifespan`
   context manager. Single event loop for all async components. Clean shutdown
   cancels live jobs. `mount()` composition with no prefix.
-- `src/leanforge_mcp/__main__.py` — enables `python -m leanforge_mcp`.
+- `src/leanforge_mcp/__main__.py` -- enables `python -m leanforge_mcp`.
 
 **Tooling**
-- `scripts/smoke_test.py` — standalone validation of config, Lake workspace,
+- `scripts/smoke_test.py` -- standalone validation of config, Lake workspace,
   compile pipeline, sorry detection, error detection, and agent logic.
   Structured pass/fail output with recovery hints.
-- `tests/test_pipeline.py` — pure-Python pytest (no Lean required). Tests
+- `tests/test_pipeline.py` -- pure-Python pytest (no Lean required). Tests
   `_apply_edit`, `_statement_hash`, `extract_statement`, multi-line theorem
   handling.
-- `config.example.toml` — fully annotated configuration template.
-- `start.ps1` — Windows bootstrap with `Require-Command` guards.
-- `glama.json`, `llms.txt` — fleet discovery artifacts.
+- `config.example.toml` -- fully annotated configuration template.
+- `start.ps1` -- Windows bootstrap with `Require-Command` guards.
+- `glama.json`, `llms.txt` -- fleet discovery artifacts.
 
 **Documentation**
-- `README.md` — architecture overview, GitHub LaTeX math rendering, quickstart,
+- `README.md` -- architecture overview, GitHub LaTeX math rendering, quickstart,
   training wheels progression (MiniF2F → PutnamBench → AlphaProof Nexus
   unsolved → erdosproblems.com).
-- `AGENTS.md` — agent protocols for Cursor/Windsurf.
-- `CLAUDE.md` — Claude Desktop / Claude Code context.
-- `docs/ARCHITECTURE.md` — detailed architecture including correct one-time
+- `AGENTS.md` -- agent protocols for Cursor/Windsurf.
+- `CLAUDE.md` -- Claude Desktop / Claude Code context.
+- `docs/ARCHITECTURE.md` -- detailed architecture including correct one-time
   Lake workspace setup, compile invocation, SQLite schema, performance table.
-- `docs/LEAN_PRIMER.md` — Lean 4 intro for engineers.
-- `docs/BENCHMARK_RESULTS.md` — tracking template for MiniF2F, PutnamBench,
+- `docs/LEAN_PRIMER.md` -- Lean 4 intro for engineers.
+- `docs/BENCHMARK_RESULTS.md` -- tracking template for MiniF2F, PutnamBench,
   Erdős unsolved set.
-- `TODO.md` — phased task list for Cursor continuation.
+- `TODO.md` -- phased task list for Cursor continuation.
 
 ### Fixed (during scaffold session)
 

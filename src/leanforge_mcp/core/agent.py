@@ -27,7 +27,7 @@ You will be shown a Lean 4 file with `sorry` placeholders in place of proofs.
 Your job is to replace every `sorry` with a valid Lean 4 tactic proof.
 
 RULES:
-1. NEVER modify the theorem statement itself — only fill `sorry`
+1. NEVER modify the theorem statement itself -- only fill `sorry`
 2. You may introduce helper lemmas (using `lemma` or `have`) before `sorry`
 3. Use Mathlib tactics: simp, ring, linarith, omega, exact, apply, induction, cases, rw
 4. If stuck, try a completely different proof strategy
@@ -77,7 +77,7 @@ class SubagentResult:
 
 def extract_statement(source: str) -> str:
     """
-    Extract the full theorem/lemma signature(s) — everything from a
+    Extract the full theorem/lemma signature(s) -- everything from a
     `theorem`/`lemma`/`example` keyword up to and including the `:=` that begins
     the proof body. This captures MULTI-LINE signatures, which the naive
     line-prefix approach missed (a theorem statement often spans several lines).
@@ -123,6 +123,21 @@ async def run_subagent(
     Single subagent: loop LLM propose → Lean compile until proven or budget exhausted.
     If on_attempt is provided, each completed turn is persisted via that callback.
     """
+    if lean.setup_in_progress:
+        return SubagentResult(
+            agent_index=agent_index,
+            proven=False,
+            final_source=initial_source,
+            failure_reason=f"Lean setup in progress: {lean.setup_status}",
+        )
+    if lean.setup_error:
+        return SubagentResult(
+            agent_index=agent_index,
+            proven=False,
+            final_source=initial_source,
+            failure_reason=f"Lean setup failed: {lean.setup_error}",
+        )
+
     source = initial_source
     statement_hash = _statement_hash(source)
     attempts: list[Attempt] = []
@@ -131,6 +146,7 @@ async def run_subagent(
     logger.info("Subagent %d starting, max_turns=%d", agent_index, max_turns)
 
     for turn in range(max_turns):
+        model_used = llm.current_model
         user_message = f"Current Lean 4 file:\n```lean\n{source}\n```"
         if last_error:
             user_message += (
@@ -152,8 +168,6 @@ async def run_subagent(
             await llm.maybe_escalate(turn)
             continue
 
-        model_used = llm.current_model
-
         replace_match = REPLACE_PATTERN.search(response)
         stuck_match = STUCK_PATTERN.search(response)
 
@@ -163,7 +177,7 @@ async def run_subagent(
             last_error = (
                 f"Previous strategy failed. Try a completely different approach.\nYour note: {note}"
             )
-            att = Attempt(turn, source, "STUCK", model_used, False, "(stuck — no edit)")
+            att = Attempt(turn, source, "STUCK", model_used, False, "(stuck -- no edit)")
             attempts.append(att)
             if on_attempt:
                 await on_attempt(agent_index, turn, source, "STUCK", model_used, False)

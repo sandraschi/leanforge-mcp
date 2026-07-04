@@ -66,10 +66,10 @@ tests/
 
 ## Critical rules
 
-- Never call `lean` directly — always `lake env lean <file>` via `LeanClient`
-- Never hardcode paths — always read from `Config`
-- Never block the asyncio event loop — all Lean and LLM calls are async
-- Never modify theorem statements in agent edits — the tamper guard will reject them
+- Never call `lean` directly -- always `lake env lean <file>` via `LeanClient`
+- Never hardcode paths -- always read from `Config`
+- Never block the asyncio event loop -- all Lean and LLM calls are async
+- Never modify theorem statements in agent edits -- the tamper guard will reject them
 - Use `uv run` not bare `python`
 
 ## Code standards
@@ -86,11 +86,11 @@ See [mcp-central-docs standards](https://github.com/sandraschi/mcp-central-docs)
 See [docs/ASSESSMENT_2026-06-24.md](ASSESSMENT_2026-06-24.md) for the full issue list.
 Quick summary of what needs doing before the first real benchmark run:
 
-1. Fix helper-lemma tamper guard (P1-1) — `agent.py`
-2. Bracket-aware `extract_statement` regex (P1-2) — `agent.py`
-3. `owner_pid` safe interrupted-job recovery (P1-4) — `job_manager.py`
-4. `cancel_requested` column for cross-process cancel (P1-6) — `job_manager.py`
-5. Repeated-edit detection + error provenance (P2-4) — `agent.py`
+1. Fix helper-lemma tamper guard (P1-1) -- `agent.py`
+2. Bracket-aware `extract_statement` regex (P1-2) -- `agent.py`
+3. `owner_pid` safe interrupted-job recovery (P1-4) -- `job_manager.py`
+4. `cancel_requested` column for cross-process cancel (P1-6) -- `job_manager.py`
+5. Repeated-edit detection + error provenance (P2-4) -- `agent.py`
 6. Smoke test gate passing
 
 Phase C (REPL client, LLM timeout/retry, cost accounting) must be in place before

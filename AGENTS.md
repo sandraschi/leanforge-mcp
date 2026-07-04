@@ -1,4 +1,4 @@
-# AGENTS.md — leanforge-mcp
+# AGENTS.md -- leanforge-mcp
 
 Agent protocols for Cursor, Windsurf, Claude Code, and any agentic IDE working in this repo.
 
@@ -54,11 +54,11 @@ leanforge-mcp\
 ## Critical rules
 
 ### Lean subprocess
-- `lean_client.py` shells out via `asyncio.create_subprocess_exec` — never `shell=True`
+- `lean_client.py` shells out via `asyncio.create_subprocess_exec` -- never `shell=True`
 - Lean path must come from config; never hardcode
 - Capture both stdout and stderr; Lean emits errors to stderr
 - Timeout every compile call (default 30s); Lean can hang on malformed input
-- `lean --stdin` is faster than `lake build` for single-theorem proofs — use it
+- `lean --stdin` is faster than `lake build` for single-theorem proofs -- use it
 
 ### LLM client
 - All LLM calls are async
@@ -74,12 +74,12 @@ leanforge-mcp\
 
 ### MCP tools
 - All tools return structured JSON, not plain text
-- `submit_theorem` returns immediately with job_id — never block for proof
-- `get_proof_status` is the polling interface; poll every 10–30s
+- `submit_theorem` returns immediately with job_id -- never block for proof
+- `get_proof_status` is the polling interface; poll every 10-30s
 - Error messages must be actionable: include Lean error, failed tactic, hint
 
 ### Lean file safety
-- Agents may only fill `sorry` — never modify theorem statements
+- Agents may only fill `sorry` -- never modify theorem statements
 - Hash theorem statements before/after each edit; reject if changed
 - Log SECURITY warning on tamper attempt
 
@@ -102,8 +102,8 @@ uv run pytest tests\ -v
 
 ## Do not
 
-- Modify theorem statements in LLM edits — reject and log
-- Hardcode API keys — config.toml only
-- Block the FastMCP event loop — all Lean/LLM calls must be async
-- Assume Lean is on PATH — always use the configured absolute path
-- Write to `workspace\` from tool handlers — go through job_manager
+- Modify theorem statements in LLM edits -- reject and log
+- Hardcode API keys -- config.toml only
+- Block the FastMCP event loop -- all Lean/LLM calls must be async
+- Assume Lean is on PATH -- always use the configured absolute path
+- Write to `workspace\` from tool handlers -- go through job_manager

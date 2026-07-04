@@ -162,9 +162,9 @@ def get_runner(ctx) -> Runner:
     """
     Retrieve the Runner. Tools live on mounted child routers, so this tries,
     in order:
-      1. This server's own lifespan dict (ctx.lifespan_context) — works when
+      1. This server's own lifespan dict (ctx.lifespan_context) -- works when
          a tool is registered directly on the parent server.
-      2. The session's request-context lifespan dict — the parent's lifespan
+      2. The session's request-context lifespan dict -- the parent's lifespan
          for mounted children. NOTE: ctx.lifespan_context does NOT fall back
          here when the child's lifespan yielded an empty dict (verified
          against installed fastmcp; see tests/test_server_integration.py).

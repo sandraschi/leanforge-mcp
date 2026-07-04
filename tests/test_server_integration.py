@@ -8,7 +8,7 @@ ctx.lifespan_context. If fastmcp changes that fallback behavior, this test
 fails loudly instead of every tool call failing in production.
 
 Requires config.toml to exist (it does in this repo). Does NOT require a
-Lean workspace — ensure_workspace degrades to a logged warning.
+Lean workspace -- ensure_workspace degrades to a logged warning.
 
 Run: uv run pytest tests/test_server_integration.py -v
 """
@@ -79,6 +79,40 @@ async def test_get_proof_status_unknown_job():
             )
             payload = json.loads(text) if text else {}
         assert "error" in payload
+
+
+async def test_tools_return_pending_during_setup():
+    """Tools must return a structured pending status if setup_in_progress is True."""
+    from leanforge_mcp.core.runner import _runner_fallback
+    if _runner_fallback and _runner_fallback.lean:
+        original_state = _runner_fallback.lean.setup_in_progress
+        original_status = _runner_fallback.lean.setup_status
+        try:
+            _runner_fallback.lean.setup_in_progress = True
+            _runner_fallback.lean.setup_status = "Mock installing..."
+
+            async with Client(mcp) as client:
+                result = await client.call_tool(
+                    "submit_theorem",
+                    {
+                        "input": {
+                            "statement": "1 = 1",
+                        }
+                    },
+                )
+                payload = getattr(result, "data", None)
+                if payload is None:
+                    blocks = getattr(result, "content", []) or []
+                    text = next(
+                        (b.text for b in blocks if getattr(b, "text", None)), None
+                    )
+                    payload = json.loads(text) if text else {}
+                assert payload.get("status") == "pending"
+                assert "Mock installing..." in payload.get("message", "")
+        finally:
+            _runner_fallback.lean.setup_in_progress = original_state
+            _runner_fallback.lean.setup_status = original_status
+
 
 
 if __name__ == "__main__":

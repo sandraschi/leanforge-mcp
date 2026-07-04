@@ -1,6 +1,6 @@
 """
 Standalone smoke test for leanforge-mcp core pipeline.
-Runs OUTSIDE the MCP layer — exercises LeanClient, config, and the agent
+Runs OUTSIDE the MCP layer -- exercises LeanClient, config, and the agent
 loop directly so you can validate before wiring into Claude Desktop.
 
 Usage:
@@ -20,6 +20,13 @@ from pathlib import Path
 
 # Add src to path so we can import without installing
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+# Reconfigure stdout/stderr to UTF-8 to prevent encoding errors on Windows
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except (AttributeError, Exception):
+    pass
 
 from leanforge_mcp.core.config import load_config
 from leanforge_mcp.core.lean_client import LeanClient
@@ -58,7 +65,7 @@ async def test_config() -> None:
                f"{lake_exe} {'found' if lake_exe.exists() else 'NOT FOUND'}")
         workspace = Path(cfg.lean.workspace_dir)
         record("workspace dir exists", workspace.exists(),
-               f"{workspace} {'found' if workspace.exists() else 'NOT FOUND — run one-time setup, see ARCHITECTURE.md'}")
+               f"{workspace} {'found' if workspace.exists() else 'NOT FOUND -- run one-time setup, see ARCHITECTURE.md'}")
     except Exception as exc:
         record("config parses", False, str(exc))
 
@@ -75,7 +82,7 @@ async def test_lean_client(cfg) -> LeanClient | None:
     ok, msg = await lean.ensure_workspace()
     record("workspace smoke test (import Mathlib + example : 1=1)", ok, msg)
     if not ok:
-        print(f"\n  {WARN}  Stopping Lean tests — workspace not ready.")
+        print(f"\n  {WARN}  Stopping Lean tests -- workspace not ready.")
         print(       "       Run one-time setup (see docs/ARCHITECTURE.md):")
         print(       "         cd workspace")
         print(       "         lake new leanforge_workspace math")
@@ -111,7 +118,7 @@ async def test_compile_error(lean: LeanClient) -> None:
     source = "import Mathlib\nexample : 1 = 1 := by\n  magic_tactic\n"
     result = await lean.compile(source)
     record("errors returned", len(result.errors) > 0,
-           result.errors[0] if result.errors else "(none returned — check stderr parsing)")
+           result.errors[0] if result.errors else "(none returned -- check stderr parsing)")
     record("not proven on error", not result.proven)
 
 
@@ -140,11 +147,11 @@ async def test_statement_hash() -> None:
     sig = extract_statement(multiline)
     record("multi-line theorem signature extracted", "sum_formula" in sig, sig[:120])
 
-    # Apply edit — should work
+    # Apply edit -- should work
     edited = _apply_edit(s1, "  sorry", "  rfl")
     record("_apply_edit fills sorry", edited is not None and "rfl" in edited)
 
-    # Apply edit — wrong text
+    # Apply edit -- wrong text
     bad = _apply_edit(s1, "  nonexistent", "  rfl")
     record("_apply_edit returns None when text not found", bad is None)
 

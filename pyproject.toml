@@ -7,13 +7,13 @@ name = "leanforge-mcp"
 version = "0.1.0"
 description = "MCP server for AI-driven formal proof search in Lean 4"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "sandraschi" }]
 keywords = ["mcp", "lean4", "theorem-proving", "formal-verification", "mathematics"]
 
 dependencies = [
-    "fastmcp>=3.4.2",
+    "fastmcp>=3.4.2,<4",
     "anthropic>=0.40.0",
     "openai>=1.50.0",
     "aiosqlite>=0.20.0",
@@ -42,11 +42,16 @@ leanforge-web = "webapp.backend.main:main"
 packages = ["src/leanforge_mcp"]
 
 [tool.ruff]
-line-length = 100
-target-version = "py311"
+line-length = 120
+target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "S", "PTH"]
+select = ["E", "F", "W", "I", "B", "S", "UP", "RUF"]
+ignore = ["S101", "B008", "B904", "S603", "E722", "RUF006", "RUF012", "B024"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

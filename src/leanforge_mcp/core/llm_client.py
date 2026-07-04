@@ -64,7 +64,13 @@ class LLMClient:
         raise ValueError(f"Unknown LLM provider: {cfg.provider!r}")
 
     async def _complete_openai_compat(self, cfg: LLMTierConfig, system: str, user: str) -> str:
-        api_key = os.environ.get(cfg.api_key_env, "ollama") if cfg.api_key_env else "ollama"
+        api_key = "ollama"
+        if cfg.api_key_env:
+            api_key = os.environ.get(cfg.api_key_env, "")
+            if not api_key:
+                raise ValueError(
+                    f"API key environment variable {cfg.api_key_env!r} is not set."
+                )
         client = AsyncOpenAI(api_key=api_key, base_url=cfg.base_url)
         response = await client.chat.completions.create(
             model=cfg.model,
@@ -75,6 +81,8 @@ class LLMClient:
             max_tokens=cfg.max_tokens,
             temperature=cfg.temperature,
         )
+        if not response.choices:
+            return ""
         return response.choices[0].message.content or ""
 
     async def _complete_anthropic(self, cfg: LLMTierConfig, system: str, user: str) -> str:
@@ -90,4 +98,6 @@ class LLMClient:
             system=system,
             messages=[{"role": "user", "content": user}],
         )
-        return message.content[0].text if message.content else ""
+        if message.content and hasattr(message.content[0], "text"):
+            return message.content[0].text
+        return ""

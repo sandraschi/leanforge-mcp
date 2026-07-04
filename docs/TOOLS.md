@@ -1,7 +1,7 @@
 # Tool Reference
 
 All tools return structured JSON. `submit_theorem` and `submit_lean_file` return
-immediately — proof search runs in the background. Use `get_proof_status` to poll.
+immediately -- proof search runs in the background. Use `get_proof_status` to poll.
 
 ---
 
@@ -13,12 +13,12 @@ Submit a theorem statement for proof search.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `statement` | string | required | The Lean 4 proposition (the part after the colon). Must be valid Lean 4 syntax — `∀ n : ℕ, ...`, not English. |
+| `statement` | string | required | The Lean 4 proposition (the part after the colon). Must be valid Lean 4 syntax -- `∀ n : ℕ, ...`, not English. |
 | `lean_stub` | string | null | Optional: full `.lean` file with sorry. If omitted, the server wraps `statement` in a minimal stub with `import Mathlib`. |
 | `hints` | string | null | Relevant Mathlib theorem names or strategy hints to prepend to the file. |
-| `tier` | int 1–3 | `1` | Starting LLM tier. Agents auto-escalate regardless. |
-| `parallel_agents` | int 1–16 | `4` | Number of independent subagents. |
-| `max_turns` | int 1–1000 | `100` | Turn budget per subagent. |
+| `tier` | int 1-3 | `1` | Starting LLM tier. Agents auto-escalate regardless. |
+| `parallel_agents` | int 1-16 | `4` | Number of independent subagents. |
+| `max_turns` | int 1-1000 | `100` | Turn budget per subagent. |
 
 **Returns:**
 ```json
@@ -53,9 +53,9 @@ AlphaProof Nexus problem files, or anything already formalized.
 |-----------|------|---------|-------------|
 | `lean_source` | string | required | Full Lean 4 source containing at least one `sorry`. |
 | `description` | string | `""` | Display label for the job. |
-| `tier` | int 1–3 | `1` | Starting LLM tier. |
-| `parallel_agents` | int 1–16 | `4` | — |
-| `max_turns` | int 1–1000 | `100` | — |
+| `tier` | int 1-3 | `1` | Starting LLM tier. |
+| `parallel_agents` | int 1-16 | `4` | -- |
+| `max_turns` | int 1-1000 | `100` | -- |
 
 Returns the same structure as `submit_theorem`.
 
@@ -63,7 +63,7 @@ Returns the same structure as `submit_theorem`.
 
 ## get_proof_status
 
-Poll a job. Call every 10–30 seconds while status is `running`.
+Poll a job. Call every 10-30 seconds while status is `running`.
 
 **Parameters:** `job_id: string`
 
@@ -101,9 +101,9 @@ Inspect the proof attempt trajectory for a job.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `job_id` | string | required | — |
+| `job_id` | string | required | -- |
 | `agent_index` | int | null | Filter to a specific subagent. |
-| `last_n` | int 1–100 | `10` | Return the N most recent attempts. |
+| `last_n` | int 1-100 | `10` | Return the N most recent attempts. |
 
 **Returns:**
 ```json
@@ -136,7 +136,7 @@ List all jobs.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `status_filter` | string | null | Filter by status: `running`, `complete`, `failed`, etc. |
-| `limit` | int 1–100 | `20` | — |
+| `limit` | int 1-100 | `20` | -- |
 
 **Returns:**
 ```json
@@ -200,7 +200,7 @@ Cancel a running proof job.
 
 Or if the job isn't live in the current process:
 ```json
-{"job_id": "uuid", "status": "running", "message": "No live task — job is already running."}
+{"job_id": "uuid", "status": "running", "message": "No live task -- job is already running."}
 ```
 
 Note: cross-process cancel (MCP server vs webapp backend) is not yet implemented

@@ -41,7 +41,7 @@ theorem sum_formula (n : ℕ) : 2 * ∑ i ∈ Finset.range (n + 1), i = n * (n +
   | succ n ih => rw [Finset.sum_range_succ]; ring_nf; linarith
 ```
 
-The compiler is the only oracle — if it compiles without `sorry`, the proof is correct.
+The compiler is the only oracle -- if it compiles without `sorry`, the proof is correct.
 
 ---
 
@@ -79,7 +79,7 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 
 "Submit this MiniF2F problem and check back in 10 minutes"
 
-"Show me all the proof attempts for job abc-123 — why is it stuck?"
+"Show me all the proof attempts for job abc-123 -- why is it stuck?"
 
 "Run validate_lean on this tactic proof to see if it compiles"
 ```
@@ -95,7 +95,7 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 | `get_proof_status` | Poll job status; returns proof when complete |
 | `list_attempts` | Inspect the attempt trajectory per agent/turn |
 | `list_jobs` | List all jobs with status summary |
-| `validate_lean` | Raw Lean 4 compile — no job tracking |
+| `validate_lean` | Raw Lean 4 compile -- no job tracking |
 | `cancel_job` | Cancel a running job |
 | `get_mathlib_search` | Natural language search over Mathlib theorems |
 
@@ -105,7 +105,7 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 
 - Python 3.11+
 - [Lean 4 via elan](https://lean-lang.org/lean4/doc/setup.html) (`winget install leanprover.elan`)
-- Mathlib workspace with cached oleans (~4GB, one-time setup — see [INSTALL.md](INSTALL.md))
+- Mathlib workspace with cached oleans (~4GB, one-time setup -- see [INSTALL.md](INSTALL.md))
 - Ollama with `deepseek-prover-v2:7b` for tier-1 (local, free)
 - DeepSeek or Anthropic API key for tier-2/3 (optional)
 

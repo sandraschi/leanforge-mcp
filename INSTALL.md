@@ -12,7 +12,7 @@
 
 ---
 
-## Option A — Manual configuration (recommended for now)
+## Option A -- Manual configuration (recommended for now)
 
 MCPB packaging is planned but not yet released. Manual setup takes about 5 minutes
 plus the one-time Mathlib download.
@@ -38,7 +38,7 @@ Open `config.toml` and verify:
 
 ### 3. Set up the Lean + Mathlib workspace (one-time, ~4GB)
 
-This is required for anything to compile. Takes 20–40 minutes on first run.
+This is required for anything to compile. Takes 20-40 minutes on first run.
 
 ```powershell
 cd workspace
@@ -70,7 +70,7 @@ $env:DEEPSEEK_API_KEY = "sk-..."
 $env:ANTHROPIC_API_KEY = "sk-ant-..."
 ```
 
-Or add them to the Claude Desktop config `env` block (see below) — they never need
+Or add them to the Claude Desktop config `env` block (see below) -- they never need
 to be in `config.toml`.
 
 ### 6. Add to Claude Desktop
@@ -108,7 +108,7 @@ Expected response: `{"proven": true, "has_sorry": false, "errors": []}`
 
 ---
 
-## Option B — Developer mode
+## Option B -- Developer mode
 
 For contributing or running with live reload. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 

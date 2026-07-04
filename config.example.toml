@@ -2,7 +2,7 @@
 # Copy to config.toml and fill in your values
 
 [lean]
-# Absolute path to LAKE executable (not lean) — we run `lake env lean` so Mathlib resolves
+# Absolute path to LAKE executable (not lean) -- we run `lake env lean` so Mathlib resolves
 lake_path = "C:\\Users\\sandr\\.elan\\bin\\lake.exe"
 
 # Lake project with Mathlib dependency + cached oleans. ONE-TIME SETUP:
@@ -16,7 +16,7 @@ workspace_dir = "D:\\Dev\\repos\\leanforge-mcp\\workspace\\leanforge_workspace"
 # Per-compile timeout in seconds (Mathlib compiles are slow; 120 is reasonable)
 compile_timeout = 120
 
-# Cap concurrent Lean processes — each loads Mathlib (~GBs RAM). 4 is safe on 64GB.
+# Cap concurrent Lean processes -- each loads Mathlib (~GBs RAM). 4 is safe on 64GB.
 max_concurrent_compiles = 4
 
 # Retain temp Lean files after job completes (debugging)
@@ -37,9 +37,9 @@ escalate_to_tier2_after = 20
 escalate_to_tier3_after = 60
 
 [llm.tier1]
-# Local Ollama — free, ~15 tok/s on 4090
+# Local Ollama -- free, ~15 tok/s on 4090
 # Pull model: ollama pull deepseek-prover-v2:7b
-# NOTE: /v1 suffix is REQUIRED — Ollama serves the OpenAI-compatible API there
+# NOTE: /v1 suffix is REQUIRED -- Ollama serves the OpenAI-compatible API there
 provider = "ollama"
 model = "deepseek-prover-v2:7b"
 base_url = "http://localhost:11434/v1"
@@ -47,7 +47,7 @@ max_tokens = 2048
 temperature = 0.7
 
 [llm.tier2]
-# DeepSeek API — cheap, strong reasoning
+# DeepSeek API -- cheap, strong reasoning
 provider = "openai_compat"
 model = "deepseek/deepseek-v4-flash"
 base_url = "https://api.deepseek.com/v1"
@@ -56,7 +56,7 @@ max_tokens = 4096
 temperature = 0.7
 
 [llm.tier3]
-# Claude Fable 5 — $10/M input, $50/M output
+# Claude Fable 5 -- $10/M input, $50/M output
 # Reserve for hard open problems only
 provider = "anthropic"
 model = "claude-fable-5"

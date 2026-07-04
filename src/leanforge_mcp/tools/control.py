@@ -21,5 +21,5 @@ async def cancel_job(job_id: str, ctx: Context) -> dict:
     return {
         "job_id": job_id,
         "status": job.status,
-        "message": f"No live task — job is already {job.status}.",
+        "message": f"No live task -- job is already {job.status}.",
     }

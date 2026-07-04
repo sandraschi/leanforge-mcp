@@ -2,7 +2,7 @@
 Lean 4 compiler client.
 
 Compiles Lean source inside a persistent Lake project so that `import Mathlib`
-resolves. A bare `lean file.lean` cannot see Mathlib — Lean code must live in a
+resolves. A bare `lean file.lean` cannot see Mathlib -- Lean code must live in a
 Lake project with dependencies on the search path. We invoke `lake env lean <file>`
 which runs the Lean compiler with the project's full search path configured.
 
@@ -32,6 +32,11 @@ WARNING_SORRY = "declaration uses 'sorry'"
 # warning is suppressed.
 SORRY_TACTIC = re.compile(r"(^|\s):=\s*by\b[\s\S]*?\bsorry\b|^\s*sorry\s*$", re.MULTILINE)
 
+DIAGNOSTIC_BLOCK = re.compile(
+    r"^(.+?:\d+:\d+:\s*(?:error|warning|info):\s*[\s\S]*?)(?=\n(?:.+?:\d+:\d+:\s*(?:error|warning|info):|\Z))",
+    re.MULTILINE | re.IGNORECASE
+)
+
 
 @dataclass
 class CompileResult:
@@ -53,6 +58,8 @@ class CompileResult:
             return "\n".join(self.errors)
         if self.raw_stderr.strip():
             return self.raw_stderr
+        if self.raw_stdout.strip():
+            return self.raw_stdout
         return ""
 
 
@@ -73,9 +80,15 @@ class LeanClient:
         self.lake_path = lake_path
         self.workspace_dir = workspace_dir
         self.timeout = timeout
-        # Gate concurrent Lean processes — each loads Mathlib and can use GBs of RAM.
+        # Gate concurrent Lean processes -- each loads Mathlib and can use GBs of RAM.
         # On 64GB Goliath, default to 4 concurrent compiles regardless of agent count.
         self._sem = compile_semaphore or asyncio.Semaphore(4)
+
+        # Setup state
+        self.setup_in_progress = False
+        self.setup_status = ""
+        self.setup_error = None
+        self._setup_task = None
 
     async def compile(self, source: str) -> CompileResult:
         """
@@ -145,42 +158,168 @@ class LeanClient:
                 tmp_path.unlink(missing_ok=True)
 
     def _extract(self, text: str, kind: str) -> list[str]:
-        """Extract Lean diagnostic lines in the form 'file:line:col: error/warning: ...'"""
+        """Extract Lean diagnostic blocks starting with 'file:line:col: kind: ...'"""
+        blocks = DIAGNOSTIC_BLOCK.findall(text)
         out = []
-        # Anchor on the structured diagnostic prefix to avoid false positives from
-        # goal text that happens to contain the words 'error' or 'warning'.
         marker = re.compile(rf":\s*{kind}:\s*", re.IGNORECASE)
-        for line in text.splitlines():
-            if marker.search(line):
-                out.append(line.strip())
+        for block in blocks:
+            if marker.search(block):
+                out.append(block.strip())
         return out
 
     async def ensure_workspace(self) -> tuple[bool, str]:
         """
         Verify the Lake workspace exists and Mathlib resolves.
-        Returns (ok, message). Does NOT create the workspace — that's a one-time
-        manual setup (lake new / lake exe cache get) documented in ARCHITECTURE.md,
-        because pulling Mathlib is a ~4GB download we don't want to trigger silently.
+        If missing or broken, starts background installation.
+        Returns (ok, message).
         """
+        if self.setup_in_progress:
+            return False, f"Setup in progress: {self.setup_status}"
+        if self.setup_error:
+            return False, f"Setup failed: {self.setup_error}"
+
+        if not self.lake_path.exists():
+            self.start_background_setup()
+            return False, "lake executable not found. Starting automatic background installation..."
+
         lakefile_toml = self.workspace_dir / "lakefile.toml"
         lakefile_lean = self.workspace_dir / "lakefile.lean"
         if not lakefile_toml.exists() and not lakefile_lean.exists():
-            return (
-                False,
-                f"No lakefile in {self.workspace_dir}. Run one-time setup:\n"
-                f"  cd {self.workspace_dir.parent}\n"
-                f"  lake new {self.workspace_dir.name} math\n"
-                f"  cd {self.workspace_dir.name}\n"
-                f"  lake exe cache get\n"
-                f"  lake build",
-            )
+            self.start_background_setup()
+            return False, f"Workspace not initialized in {self.workspace_dir}. Starting background setup..."
 
         # Smoke test: compile a trivial Mathlib import.
         result = await self.compile("import Mathlib\nexample : 1 = 1 := rfl\n")
         if result.success:
-            return (True, "Workspace OK, Mathlib resolves.")
+            return True, "Workspace OK, Mathlib resolves."
+
+        self.start_background_setup()
         return (
             False,
-            f"Workspace exists but Mathlib smoke test failed: {result.error_message[:300]}\n"
-            "Try: lake exe cache get && lake build",
+            f"Mathlib smoke test failed. Triggering automatic background repair: {result.error_message[:200]}",
         )
+
+    def start_background_setup(self) -> None:
+        if self.setup_in_progress:
+            return
+        self.setup_in_progress = True
+        self.setup_status = "Starting background setup..."
+        self.setup_error = None
+        self._setup_task = asyncio.create_task(self._run_setup_task())
+
+    async def _run_setup_task(self) -> None:
+        try:
+            # 1. Install elan if lake.exe is missing
+            if not self.lake_path.exists():
+                self.setup_status = "Downloading and running elan installer..."
+                logger.info("elan/lake not found. Initiating silent elan-init install.")
+
+                import tempfile
+                import urllib.request
+
+                # Run download in a threadpool to avoid blocking event loop
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    ps1_path = Path(tmpdir) / "elan-init.ps1"
+                    url = "https://elan.lean-lang.org/elan-init.ps1"
+                    loop = asyncio.get_running_loop()
+                    await loop.run_in_executor(
+                        None, urllib.request.urlretrieve, url, str(ps1_path)
+                    )
+
+                    if not ps1_path.exists():
+                        raise RuntimeError("Failed to download elan-init.ps1")
+
+                    # Run installer silently with NoPrompt
+                    proc = await asyncio.create_subprocess_exec(
+                        "powershell.exe",
+                        "-ExecutionPolicy", "Bypass",
+                        "-File", str(ps1_path),
+                        "-NoPrompt", "1",
+                        "-DefaultToolchain", "stable",
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    _stdout, stderr = await proc.communicate()
+                    if proc.returncode != 0:
+                        err_msg = stderr.decode(errors="replace")
+                        raise RuntimeError(f"elan-init execution failed with code {proc.returncode}: {err_msg}")
+
+                if not self.lake_path.exists():
+                    raise RuntimeError(f"elan-init succeeded but lake was not found at expected path: {self.lake_path}")
+                logger.info("elan/lake successfully installed.")
+
+            # 2. Create Lake math workspace if missing
+            self.workspace_dir.mkdir(parents=True, exist_ok=True)
+            lakefile_toml = self.workspace_dir / "lakefile.toml"
+            lakefile_lean = self.workspace_dir / "lakefile.lean"
+
+            if not lakefile_toml.exists() and not lakefile_lean.exists():
+                self.setup_status = f"Creating new Lean math project in {self.workspace_dir.name}..."
+                logger.info("Initializing new Lean project in workspace.")
+
+                # If the directory exists but is empty, remove it to let lake new recreate it
+                if self.workspace_dir.exists() and not list(self.workspace_dir.iterdir()):
+                    self.workspace_dir.rmdir()
+
+                proc = await asyncio.create_subprocess_exec(
+                    str(self.lake_path),
+                    "new",
+                    self.workspace_dir.name,
+                    "math",
+                    cwd=str(self.workspace_dir.parent),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _stdout, stderr = await proc.communicate()
+                if proc.returncode != 0:
+                    err_msg = stderr.decode(errors="replace")
+                    raise RuntimeError(f"lake new failed with code {proc.returncode}: {err_msg}")
+
+            # 3. Download Mathlib cache
+            self.setup_status = "Downloading Mathlib precompiled cache (this can take several minutes)..."
+            logger.info("Downloading Mathlib precompiled cache.")
+            proc = await asyncio.create_subprocess_exec(
+                str(self.lake_path),
+                "exe",
+                "cache",
+                "get",
+                cwd=str(self.workspace_dir),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _stdout, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                err_msg = stderr.decode(errors="replace")
+                raise RuntimeError(f"lake exe cache get failed with code {proc.returncode}: {err_msg}")
+
+            # 4. Build workspace
+            self.setup_status = "Building Lean/Mathlib workspace (compiling files)..."
+            logger.info("Building Lean/Mathlib workspace.")
+            proc = await asyncio.create_subprocess_exec(
+                str(self.lake_path),
+                "build",
+                cwd=str(self.workspace_dir),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _stdout, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                err_msg = stderr.decode(errors="replace")
+                raise RuntimeError(f"lake build failed with code {proc.returncode}: {err_msg}")
+
+            # 5. Verify
+            self.setup_status = "Verifying installation..."
+            logger.info("Verifying Lean workspace compilation.")
+            result = await self.compile("import Mathlib\nexample : 1 = 1 := rfl\n")
+            if not result.success:
+                raise RuntimeError(f"Workspace verification failed: {result.error_message}")
+
+            self.setup_status = "Ready"
+            self.setup_in_progress = False
+            logger.info("Lean/Mathlib workspace setup successfully completed and verified.")
+
+        except Exception as exc:
+            logger.exception("Error during background Lean/Mathlib setup")
+            self.setup_error = str(exc)
+            self.setup_status = f"Failed: {exc}"
+            self.setup_in_progress = False

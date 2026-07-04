@@ -42,7 +42,7 @@ async def lifespan(server: FastMCP):
     """
     Startup: initialise all components inside the SERVING event loop so async
     SQLite connections and the task registry belong to the right loop.
-    Yields the Runner as lifespan context — tools retrieve it via get_runner(ctx).
+    Yields the Runner as lifespan context -- tools retrieve it via get_runner(ctx).
     """
     config = _load_config()
 

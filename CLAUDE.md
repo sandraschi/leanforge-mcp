@@ -1,4 +1,4 @@
-# CLAUDE.md — leanforge-mcp
+# CLAUDE.md -- leanforge-mcp
 
 Claude Desktop / Claude Code notes for working in this repo.
 
@@ -11,8 +11,8 @@ First subagent to produce a sorry-free compile wins.
 
 ## Key concepts
 
-- `sorry` in Lean = "trust me, skip this proof" — invalid until all sorry replaced
-- The Lean compiler is the oracle — its error messages ARE the training signal
+- `sorry` in Lean = "trust me, skip this proof" -- invalid until all sorry replaced
+- The Lean compiler is the oracle -- its error messages ARE the training signal
 - Mathlib has ~150k theorems; LLMs know it well from training data
 - `import Mathlib` at top of file gives access to all of it
 
@@ -73,7 +73,7 @@ submit_theorem(statement="...", tier=2, max_turns=200)
 
 # Hard open problem
 submit_theorem(statement="...", tier=3, max_turns=500)
-# At $50/M output — budget carefully
+# At $50/M output -- budget carefully
 ```
 
 ## File locations on Goliath

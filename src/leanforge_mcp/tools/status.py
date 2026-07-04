@@ -100,7 +100,7 @@ async def list_jobs(
 @router.tool(
     description=(
         "Run the Lean 4 compiler on arbitrary source and return output. No job tracking, "
-        "no LLM — raw compile. Use to test a proof or debug Lean syntax before submitting."
+        "no LLM -- raw compile. Use to test a proof or debug Lean syntax before submitting."
     ),
 )
 async def validate_lean(
@@ -108,6 +108,18 @@ async def validate_lean(
     ctx: Context,
 ) -> dict:
     runner = get_runner(ctx)
+    if runner.lean.setup_in_progress:
+        return {
+            "success": False,
+            "status": "pending",
+            "message": f"Leanforge setup running: {runner.lean.setup_status}. Try again shortly.",
+        }
+    if runner.lean.setup_error:
+        return {
+            "success": False,
+            "status": "error",
+            "message": f"Leanforge setup failed: {runner.lean.setup_error}. Fix installation files.",
+        }
     result = await runner.lean.compile(lean_source)
     return {
         "success": result.success,

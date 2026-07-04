@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
         compile_semaphore=asyncio.Semaphore(config.lean.max_concurrent_compiles),
     )
 
-    # Check workspace once at startup and cache — the status endpoint returns
+    # Check workspace once at startup and cache -- the status endpoint returns
     # this cached result so it never blocks on a Lean compile at request time.
     ws_ok, ws_msg = await lean.ensure_workspace()
     app.state.lean_workspace_status = {
@@ -90,7 +90,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="leanforge-mcp",
-    description="Formal proof search for Lean 4 — web dashboard",
+    description="Formal proof search for Lean 4 -- web dashboard",
     version="0.1.1",
     lifespan=lifespan,
 )

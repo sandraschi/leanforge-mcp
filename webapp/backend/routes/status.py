@@ -1,4 +1,4 @@
-"""Real system status endpoint — no fake data."""
+"""Real system status endpoint -- no fake data."""
 
 from __future__ import annotations
 
@@ -15,29 +15,57 @@ router = APIRouter(tags=["status"])
 VERSION = "0.1.1"
 
 
+def _get_dynamic_workspace_status(runner) -> dict:
+    lean = runner.lean
+    if lean.setup_in_progress:
+        return {
+            "ok": False,
+            "status": "pending",
+            "message": f"Setup in progress: {lean.setup_status}",
+            "checked_at": datetime.now(UTC).isoformat(),
+        }
+    if lean.setup_error:
+        return {
+            "ok": False,
+            "status": "error",
+            "message": f"Setup failed: {lean.setup_error}",
+            "checked_at": datetime.now(UTC).isoformat(),
+        }
+    if not lean.lake_path.exists():
+        return {
+            "ok": False,
+            "status": "missing",
+            "message": "lake executable not found.",
+            "checked_at": datetime.now(UTC).isoformat(),
+        }
+    return {
+        "ok": True,
+        "status": "ready",
+        "message": "Workspace OK, Mathlib resolves.",
+        "checked_at": datetime.now(UTC).isoformat(),
+    }
+
+
 @router.get("/api/health")
 async def health(request: Request):
     """Shallow liveness check. Does not hit the DB."""
-    lean_ws = getattr(request.app.state, "lean_workspace_status", None)
+    runner = request.app.state.runner
+    lean_ws = _get_dynamic_workspace_status(runner)
     return {
         "status": "ok",
         "server": "leanforge-mcp",
         "version": VERSION,
-        "lean_workspace_ok": lean_ws["ok"] if lean_ws else None,
+        "lean_workspace_ok": lean_ws["ok"],
     }
 
 
 @router.get("/api/status")
 async def status(request: Request):
-    """Full system status — hits DB for real job counts."""
+    """Full system status -- hits DB for real job counts."""
     runner = request.app.state.runner
-    lean_ws = getattr(request.app.state, "lean_workspace_status", {
-        "ok": None, "message": "Status not yet checked.", "checked_at": None
-    })
+    lean_ws = _get_dynamic_workspace_status(runner)
 
-    # Real job counts from DB — list up to 2000, enough for a count
-    jobs = await runner.jobs.list_jobs(limit=2000)
-    by_status: Counter = Counter(j.status for j in jobs)
+    counts = await runner.jobs.get_job_counts()
 
     db_path = Path(runner.config.database.path)
     db_size = db_path.stat().st_size if db_path.exists() else None
@@ -63,12 +91,12 @@ async def status(request: Request):
             "tier3_model": runner.config.llm.tier3.model,
         },
         "jobs": {
-            "total": len(jobs),
-            "running": by_status.get("running", 0),
-            "complete": by_status.get("complete", 0),
-            "failed": by_status.get("failed", 0),
-            "cancelled": by_status.get("cancelled", 0),
-            "interrupted": by_status.get("interrupted", 0),
+            "total": counts.get("total", 0),
+            "running": counts.get("running", 0),
+            "complete": counts.get("complete", 0),
+            "failed": counts.get("failed", 0),
+            "cancelled": counts.get("cancelled", 0),
+            "interrupted": counts.get("interrupted", 0),
             "live_tasks": len(runner._tasks),
         },
     }

@@ -1,23 +1,23 @@
-# PRD — leanforge-mcp
+# PRD -- leanforge-mcp
 
 **Product Requirements Document**
 **Version:** 0.1
 **Date:** 2026-06-10
 **Owner:** sandraschi
-**Status:** In development — Phase 1 (smoke test pending)
+**Status:** In development -- Phase 1 (smoke test pending)
 
 ---
 
 ## 1. Problem
 
 Formal theorem proving in Lean 4 is powerful but slow for a solo researcher.
-The bottleneck is not mathematical creativity — it is the mechanical work of
+The bottleneck is not mathematical creativity -- it is the mechanical work of
 translating a proof idea into valid Lean 4 tactic syntax, iterating against
 compiler errors, and finding the right Mathlib lemma names.
 
 LLMs are good at exactly this mechanical work, given a tight feedback loop.
-DeepMind's AlphaProof Nexus demonstrated in May 2026 that an agentic loop —
-LLM proposes, Lean compiler judges, errors feed back — is sufficient to solve
+DeepMind's AlphaProof Nexus demonstrated in May 2026 that an agentic loop --
+LLM proposes, Lean compiler judges, errors feed back -- is sufficient to solve
 research-level open problems (9 of 353 Erdős problems, 44 OEIS conjectures)
 at a cost of a few hundred dollars per solved problem.
 
@@ -33,11 +33,11 @@ an individual researcher.
 leanforge-mcp is an MCP server that exposes formal proof search as a set of
 tools accessible to any MCP-capable agent or IDE. The user submits a theorem;
 the server runs the proof search pipeline and returns a machine-verified Lean 4
-proof — or an honest failure with the full search trajectory preserved for
+proof -- or an honest failure with the full search trajectory preserved for
 inspection.
 
 The name: a forge shapes raw material under repeated impact. Proof search is
-exactly that — iterative hammering of a sorry placeholder until the compiler
+exactly that -- iterative hammering of a sorry placeholder until the compiler
 accepts the result.
 
 ---
@@ -62,7 +62,7 @@ support.
 ## 4. Goals
 
 **Must have (v0.1)**
-- Correct `lake env lean` compile pipeline — `import Mathlib` resolves
+- Correct `lake env lean` compile pipeline -- `import Mathlib` resolves
 - `submit_theorem` → background job → `get_proof_status` polling flow
 - All attempts persisted to SQLite for inspection after the fact
 - MiniF2F sanity pass (5 easy problems solved by tier-1 local model)
@@ -127,8 +127,8 @@ JobManager  LeanClient
 - `lake env lean <file>` inside a persistent Mathlib workspace (not `lean --stdin`)
 - Compiler output (not source regex) for sorry detection
 - Full multi-line theorem signature hashing for tamper detection
-- FastMCP `lifespan=` context manager — single event loop, no globals
-- SQLite for persistence — single user, no external service dependency
+- FastMCP `lifespan=` context manager -- single event loop, no globals
+- SQLite for persistence -- single user, no external service dependency
 - Tier escalation irreversible per-subagent (cheap → expensive only)
 
 ---
@@ -139,7 +139,7 @@ JobManager  LeanClient
 |------|-------|----------|------|-----|
 | 1 | deepseek-prover-v2:7b | Ollama local | Free | Mechanical fill-in, simple lemmas |
 | 2 | deepseek-v4-flash | DeepSeek API | ~$0.001/attempt | Complex strategy, stuck tier-1 |
-| 3 | claude-fable-5 | Anthropic API | ~$0.05–1.00/session | Hard open problems, novel results |
+| 3 | claude-fable-5 | Anthropic API | ~$0.05-1.00/session | Hard open problems, novel results |
 
 Escalation triggers per subagent (configurable):
 - Turn 20: tier 1 → tier 2
@@ -205,6 +205,6 @@ Escalation triggers per subagent (configurable):
 - Lean 3 support
 - Isabelle, Coq, or other proof assistants
 - Natural language to formal theorem translation (only proof search, not
-  formalization — the user must provide a valid Lean stub with sorry)
+  formalization -- the user must provide a valid Lean stub with sorry)
 - Distributed multi-machine proof search
 - Any web frontend
