@@ -130,11 +130,50 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 
 ---
 
-## Status
+## Roadmap
 
-Phase A complete: server starts, all tools callable from Claude Desktop.
-Phase B (correctness fixes) in progress. Not yet benchmarked.
-See [docs/ASSESSMENT_2026-06-24.md](docs/ASSESSMENT_2026-06-24.md) for the full gap analysis.
+| Phase | What | Status |
+|-------|------|--------|
+| **A** | Core loop: LLM proposes, Lean judges, error feeds back | Done |
+| **B** | Correctness hardening, edge case handling, timeout tuning | In progress |
+| **C** | **Multi-agent parallel scheduling** (Agent B from paper) -- run N loops in parallel, first to finish wins | Planned |
+| **D** | **Self-critique step** -- LLM reviews its own proof before compile, catches obvious errors early | Planned |
+| **E** | **Webapp proof explorer** -- interactive tree view of attempted proof paths, live tactic streaming | Planned |
+| **F** | **Premise selection** -- before generating tactics, search Mathlib for relevant lemmas | Planned |
+| **G** | **Cumulative context windowing** -- smart summarization of long error chains instead of blind concatenation | Planned |
+| **H** | **Benchmark dashboard** -- webapp page tracking MiniF2F, PutnamBench, Erdős results per model/config | Stretch |
+| **I** | **Human-in-the-loop** -- when the agent is stuck, pause and surface the current state for a human hint | Stretch |
+| **J** | **Proof caching** -- deduplicate sub-proofs so repeated lemmas compile instantly | Stretch |
+
+### What each phase enables
+
+**A + B** let you submit a theorem and get a proof back on the other end.
+It works, it's useful, but it's single-threaded and has no visibility into
+what the LLM is trying.
+
+**C** changes the game: N parallel agents means wall-clock time drops from
+"however long one LLM takes" to "however long the fastest of N LLMs takes."
+For hard theorems where the LLM wanders into dead ends, this is the
+difference between 5 minutes and 30 seconds.
+
+**D** prevents the LLM from wasting compiles on obviously wrong tactics.
+Cheap to add (one extra LLM call per attempt) and the paper shows it
+improves solve rate by ~15 percentage points on Agent A alone.
+
+**E** is the user-facing payoff: instead of staring at "status: running"
+and polling, you watch the LLM try tactics in real time, see which paths
+it abandoned, and understand why it eventually succeeded or failed.
+
+**F** addresses the most common failure mode: the LLM writes a correct
+tactic for a lemma that doesn't exist in the current context. Premise
+selection (a small retrieval step before tactic generation) cuts this
+dramatically.
+
+**G** is invisible but critical: as the LLM accumulates 10+ failed
+attempts, the error context grows past the model's window. Smart
+summarization keeps relevant signal without drowning the LLM in noise.
+
+Full gap analysis: [docs/ASSESSMENT_2026-06-24.md](docs/ASSESSMENT_2026-06-24.md)
 
 ---
 
