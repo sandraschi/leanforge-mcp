@@ -124,6 +124,7 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 | [docs/LEAN.md](docs/LEAN.md) | Lean 4 language reference, tactic guide, bibliography, link collection |
 | [docs/LEAN_PRIMER.md](docs/LEAN_PRIMER.md) | Quick Lean 4 intro for engineers (short version) |
 | [docs/ALPHAPROOF_NEXUS.md](docs/ALPHAPROOF_NEXUS.md) | The technique: AlphaProof Nexus paper explained |
+| [docs/COVERAGE_GAP.md](docs/COVERAGE_GAP.md) | Why DeepMind got MSM coverage and a startup wouldn't |
 | [docs/BENCHMARK_RESULTS.md](docs/BENCHMARK_RESULTS.md) | MiniF2F, PutnamBench, Erdős results |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Contributing, dev setup, test commands |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common errors and fixes |
