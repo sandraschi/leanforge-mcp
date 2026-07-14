@@ -29,7 +29,7 @@ from leanforge_mcp.core.lean_client import LeanClient
 from leanforge_mcp.core.runner import Runner
 
 from webapp.backend.event_bus import JobEventBus
-from webapp.backend.routes import docs, jobs, problems, status, stream
+from webapp.backend.routes import docs, jobs, problems, skills, status, stream
 
 CONFIG_PATH = Path(__file__).parent.parent.parent / "config.toml"
 BACKEND_PORT = 10855
@@ -106,6 +106,7 @@ app.include_router(status.router)
 app.include_router(jobs.router)
 app.include_router(problems.router)
 app.include_router(stream.router)
+app.include_router(skills.router)
 app.include_router(docs.router)
 
 

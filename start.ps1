@@ -13,10 +13,10 @@ $ErrorActionPreference = "Stop"
 function Require-Command {
     param([string]$Name, [string]$InstallHint)
     if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
-        Write-Error "✗ $Name not found. $InstallHint"
+        Write-Error "âœ- $Name not found. $InstallHint"
         exit 1
     }
-    Write-Host "✅ $Name found at $(where.exe $Name 2>$null | Select-Object -First 1)"
+    Write-Host "âœ… $Name found at $(where.exe $Name 2>$null | Select-Object -First 1)"
 }
 
 Write-Host "leanforge-mcp" -ForegroundColor Cyan
@@ -38,7 +38,7 @@ if ($Install -or -not (Test-Path ".venv")) {
 }
 
 if ($Check) {
-    Write-Host "✅ Dependency check passed" -ForegroundColor Green
+    Write-Host "âœ… Dependency check passed" -ForegroundColor Green
     exit 0
 }
 

@@ -11,6 +11,7 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
+from typing import Any
 
 from fastmcp import FastMCP
 from fastmcp.server.lifespan import lifespan as fastmcp_lifespan
@@ -91,6 +92,59 @@ mcp.mount(submit.router)
 mcp.mount(status.router)
 mcp.mount(control.router)
 mcp.mount(mathlib.router)
+
+# -- Skills ----------------------------------------------------------------
+
+_SKILL_DIR = Path(__file__).parent / "skills"
+
+
+@mcp.resource("skill://lean-expert/SKILL.md")
+async def get_lean_expert_skill() -> str:
+    """Lean 4 Expert skill -- current versions, tactics, error fixes."""
+    skill_path = _SKILL_DIR / "lean_expert" / "SKILL.md"
+    if skill_path.exists():
+        return skill_path.read_text(encoding="utf-8")
+    return "Skill not found."
+
+
+@mcp.resource("skill://{name}")
+async def get_skill(name: str) -> str:
+    """Generic skill resolver."""
+    skill_path = _SKILL_DIR / name / "SKILL.md"
+    if skill_path.exists():
+        return skill_path.read_text(encoding="utf-8")
+    return f"Skill '{name}' not found."
+
+
+@mcp.resource("resource://skills/list")
+async def list_skills() -> str:
+    """List all available skills."""
+    if not _SKILL_DIR.is_dir():
+        return "[]"
+    skills = [p.parent.name for p in _SKILL_DIR.rglob("SKILL.md")]
+    import json
+    return json.dumps(skills)
+
+
+# -- Prompts ---------------------------------------------------------------
+
+
+@mcp.prompt()
+async def lean_help(topic: str = "") -> str:
+    """Get help with a Lean concept, tactic, or error."""
+    if not topic:
+        return ("I can help with Lean 4. Ask about tactics (simp, omega, ring, "
+                "linarith), syntax (calc blocks, match expressions), common errors, "
+                "or Mathlib lemmas. What would you like to know?")
+    return f"Here's what I know about '{topic}' in Lean 4.\n\nConsulting skill context...\n\nUse `get_mathlib_search` to find relevant lemmas."
+
+
+@mcp.prompt()
+async def theorem_coaching() -> str:
+    """Get step-by-step guidance through a Lean proof."""
+    return ("I'll help you write a Lean 4 proof. Describe the theorem you're trying "
+            "to prove, what you've tried, and where you're stuck. I can suggest "
+            "tactics, lemmas from Mathlib, and proof strategies.")
 
 
 def main() -> None:

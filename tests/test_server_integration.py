@@ -7,8 +7,8 @@ tools on mounted child routers reach the parent's lifespan dict through
 ctx.lifespan_context. If fastmcp changes that fallback behavior, this test
 fails loudly instead of every tool call failing in production.
 
-Requires config.toml to exist (it does in this repo). Does NOT require a
-Lean workspace -- ensure_workspace degrades to a logged warning.
+Requires config.toml to exist (it does in this repo). Mathlib compile is stubbed
+in these tests -- see skip_lean_workspace_smoke fixture.
 
 Run: uv run pytest tests/test_server_integration.py -v
 """
@@ -32,6 +32,18 @@ EXPECTED_TOOLS = {
     "validate_lean",
     "get_mathlib_search",
 }
+
+
+@pytest.fixture(autouse=True)
+def skip_lean_workspace_smoke(monkeypatch):
+    """Lifespan calls ensure_workspace() which compiles Mathlib (~minutes). Stub it."""
+    async def _fast_ok(self):
+        return True, "Workspace OK (integration test stub)"
+
+    monkeypatch.setattr(
+        "leanforge_mcp.core.lean_client.LeanClient.ensure_workspace",
+        _fast_ok,
+    )
 
 
 async def test_tools_mounted_unprefixed():

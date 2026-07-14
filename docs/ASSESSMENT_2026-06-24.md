@@ -4,6 +4,8 @@
 **Scope:** Follow-up to 2026-06-10 assessment. All P0 items resolved; P1 correctness
 fixes applied in this session. Remaining open items documented below.
 
+> **REAL-HARDWARE VERIFICATION (2026-07-09):** `uv run pytest tests/ -v` on Goliath (Windows, Python 3.13.5): **56/56 passed in 79.18s.** Confirms every P1/P2-4 fix below holds on the actual target platform, not just the Linux scratch-container mirrors used during development. (A `PermissionError` in an unrelated pytest `atexit` temp-cleanup callback appears after the run completes -- cosmetic Windows temp-lock race, not a test failure.)
+
 ---
 
 ## Status vs 2026-06-10 assessment
@@ -26,37 +28,27 @@ fixes applied in this session. Remaining open items documented below.
 | P3-6: pseudo-Lean field doc | `'for all n : ℕ'` → `'∀ n : ℕ'` | `tools/submit.py` |
 | P3-8: stray fleet file | `scripts/FleetStartMode.ps1` deleted | -- |
 
+### Fixed in this session (2026-07-09)
+
+| Item | Fix | File |
+|------|-----|------|
+| P1-1: Helper-lemma tamper guard conflict | Name-keyed comparison (`capture_original_signatures`/`check_tamper`) replaces the single concatenated-hash check: every original declaration must keep its exact signature under its original NAME; new names (helper lemmas) are unrestricted. Keying on name (not just text presence) closes a decoy-duplicate attack a naive fix would miss. New module `core/lean_lexer.py`. 21 new tests, all passing (verified by actual pytest run); 7 pre-existing hash/extract tests unchanged and still passing. | `agent.py`, `lean_lexer.py` (new) |
+| P1-2: `extract_statement` truncates at first `:=` | `lean_lexer.py` tracks bracket nesting depth and skips comments/strings, so a default-arg binder's own `:=` is no longer mistaken for the proof-start `:=`. Bonus: comment-stripping also eliminates a false-positive tamper class. | `lean_lexer.py` |
+| (found during fix) Tamper-rejected turns not persisted | The tamper-guard branch in `run_subagent` was the one rejection path not calling `on_attempt`. Now calls it with a `TAMPER_REJECTED:` marker like the other branches. | `agent.py` |
+
 ---
 
 ## Still open
 
 ### P1 -- Correctness (fix before sustained proof runs)
 
-**P1-1: Helper-lemma tamper guard conflict**
-The system prompt invites `lemma` or `have` helpers. `extract_statement()` hashes
-all `theorem|lemma|example` signatures -- a top-level helper lemma added by the
-agent changes the signature set and gets rejected as tampering.
+~~**P1-1: Helper-lemma tamper guard conflict**~~ -- Fixed 2026-07-09 (see "Fixed in this session" above).
 
-Fix: capture the *original* signature set at job start; require original signatures
-to remain present and unmodified while permitting *additional* ones. ~15 lines in
-`agent.py`.
+~~**P1-2: `extract_statement` regex truncates at first `:=`**~~ -- Fixed 2026-07-09 (see "Fixed in this session" above).
 
-**P1-2: `extract_statement` regex truncates at first `:=`**
-Pattern `\b(theorem|lemma|example)\b.*?:=` stops at the first `:=`, which may be
-inside a default-arg binder (`(n : ℕ := 0)`), leaving the actual proposition
-unprotected. Fix: anchor on `:=` followed by proof-start tokens
-(`:=\s*(by\b|sorry\b|calc\b|fun\b|⟨)`) or scan at bracket-depth zero.
+~~**P1-4: Webapp startup marks live MCP-server jobs as interrupted**~~ -- Fixed 2026-07-09. Added `owner_pid`/`owner_started_at` columns (creation-timestamp double-check guards against OS PID reuse, not just PID-alone matching); `init()`'s startup sweep now only interrupts jobs whose owning process is confirmed gone via `psutil`, leaving jobs owned by a still-live other process alone. Migration is safe against pre-existing DBs (`PRAGMA table_info` + `ALTER TABLE ADD COLUMN` for any missing column). 7 tests in `tests/test_job_manager_cross_process.py`, all passing (verified by actual pytest run, including a real spawn-and-kill subprocess for a guaranteed-dead PID case).
 
-**P1-4: Webapp startup marks live MCP-server jobs as interrupted**
-`JobManager.init()` unconditionally flips `running` → `interrupted`. If the webapp
-is restarted while the stdio MCP server has live jobs, those jobs are falsely
-interrupted. Fix: add `owner_pid` column; `init()` only marks jobs interrupted
-whose PID is no longer alive.
-
-**P1-6: Cross-process cancel is a no-op**
-`Runner.cancel()` only checks the in-process `_tasks` dict. A job started in the
-MCP server cannot be cancelled from the webapp and vice versa. Fix: add
-`cancel_requested INTEGER` column; agent loop polls it between turns.
+~~**P1-6: Cross-process cancel is a no-op**~~ -- Fixed 2026-07-09, same session. Added `cancel_requested` column + `JobManager.request_cancel`/`is_cancel_requested`; `Runner.cancel()` now always records the flag for any queued/running job regardless of whether a local `asyncio.Task` exists, so a job started in one process can be cancelled from the other. `agent.py` gained an injected `CancelPoll` callable (same pattern as the existing `on_attempt` hook, keeping agent.py DB-agnostic) checked once per turn, before any LLM or Lean call. 3 additional tests in `tests/test_cancel_poll.py` confirm the check fires before touching `llm`/`lean` at all (via stub objects that raise if called).
 
 ### P2 -- Performance and safety (gate before any batch run)
 
@@ -81,10 +73,7 @@ agents. An overnight batch without a spend meter is a budget risk.
 Fix: accumulate `input_tokens`/`output_tokens` per attempt; enforce
 `max_cost_per_job` from config; global cap in the batch runner.
 
-**P2-4: Stateless prompting -- model has no memory of failed strategies**
-Each turn sends only the current file + last error. The model will retry the same
-tactic. Fix: detect repeated identical edits (hash `old→new`) and inject explicit
-feedback; maintain a rolling summary of failed (tactic, error-class) pairs.
+~~**P2-4: Stateless prompting -- model has no memory of failed strategies**~~ -- Fixed 2026-07-09, same session (completes Phase B -- every P1/P2-4 item in this assessment is now closed). Two mechanisms: (1) exact repeated-edit detection via `hash(old, new)` -- a resent identical edit is caught BEFORE a real Lean recompile (saves ~30-60s), with a pointed pushback quoting the prior failure instead of a generic retry message; (2) a rolling summary of (tactic snippet, error class) pairs, deduped and capped at 8, injected into each turn's prompt. Error classification (`_classify_error`) is substring-based against Lean 4's well-documented core error headers (unsolved goals, type mismatch, unknown identifier/constant); tactic-specific messages (simp/linarith/ring/omega) are matched more loosely and flagged in the code as unverified against live compiler output -- worth tightening once real proof runs produce a sample corpus. 11 tests in `tests/test_p2_4_stateless_prompting.py`, all passing (verified via actual pytest run with a scripted stub LLM and a call-counting stub Lean client, proving the compile-skip is real and the prompt injection contains the right content, not just that the code runs).
 
 ### P3 -- Hygiene
 

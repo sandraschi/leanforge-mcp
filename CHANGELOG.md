@@ -8,6 +8,49 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed (2026-07-08 to 2026-07-09 -- Phase B correctness, see docs/ASSESSMENT_2026-06-24.md)
+
+Every P1 correctness item plus P2-4 (stateless prompting) closed in one
+sprint. Verified via 42 new tests, all executed for real -- first in
+scratch Linux containers during development, then confirmed with
+`uv run pytest tests/ -v` on Goliath itself (56/56 passed, 79.18s).
+
+- **P1-1: helper-lemma tamper guard conflict.** The old guard hashed all
+  signatures concatenated together, so a legitimate helper lemma (which
+  the system prompt explicitly invites) got rejected as tampering.
+  Replaced with a name-keyed check (`capture_original_signatures` /
+  `check_tamper` in `agent.py`): every ORIGINAL declaration must keep its
+  exact signature under its original name; new names are unrestricted.
+  Keying on name (not just "is the text present anywhere") also closes a
+  decoy-duplicate attack -- an agent could otherwise add a lemma
+  reproducing the original text under a new name while quietly weakening
+  the real theorem under its original name.
+- **P1-2: `extract_statement` truncated at the first `:=`.** A default-arg
+  binder's own `:=` (e.g. `(n : Nat := 0)`) was mistaken for the
+  proof-start `:=`, leaving the actual return type unprotected. New
+  module `core/lean_lexer.py`: a bracket/comment/string-aware scanner
+  that finds the terminating `:=` at the correct nesting depth. Bonus:
+  comment-stripping also eliminates a false-positive tamper class.
+- **P1-4: webapp restart falsely interrupted live MCP-server jobs.**
+  `JobManager.init()` unconditionally flipped every `running` job to
+  `interrupted`. Added `owner_pid`/`owner_started_at` columns (the latter
+  guards against OS PID reuse between crash and restart); the startup
+  sweep now only interrupts jobs whose owning process is confirmed dead
+  via `psutil`.
+- **P1-6: cross-process cancel was a no-op.** `Runner.cancel()` only
+  checked its own process's in-memory task dict. Added a
+  `cancel_requested` DB column any process can set; the agent loop polls
+  it once per turn via an injected callable (same pattern as the existing
+  `on_attempt` hook, keeping `agent.py` DB-agnostic).
+- **P2-4: stateless prompting.** Each turn was a fresh LLM call with only
+  the current file + last error -- no memory of failed strategies. Added
+  exact repeated-edit detection (`hash(old, new)`; skips a real Lean
+  recompile, ~30-60s, when the model resends something already known to
+  fail) and a rolling summary of (tactic, error-class) pairs injected into
+  the prompt, capped at 8.
+- (found during the P1-1 fix) tamper-rejected turns were not persisted --
+  the tamper branch was the one rejection path not calling `on_attempt`.
+
 ### Fixed (2026-06-10, Phase A -- see docs/ASSESSMENT_2026-06-10.md)
 
 - **P0: `ctx.lifespan` → proper Runner retrieval.** Installed fastmcp exposes
@@ -36,12 +79,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Planned
 
-- EVOLVE-BLOCK marker support (Phase 2)
-- Attempt Elo ranking for partial proof sketches (Phase 2)
-- AlphaProof Nexus unsolved batch runner (Phase 2)
-- Overnight job scheduler with budget cap (Phase 2)
-- `meta_mcp` and `advanced-memory-mcp` fleet integration (Phase 2)
-- Population-based agent (Agent D from AlphaProof Nexus) (Phase 3)
+- **Phase C (next):** REPL worker pool for compile-time (P2-1 -- every turn
+  currently pays a full `import Mathlib` compile, ~30-60s), LLM client
+  timeout/retry hardening (P2-2), token/cost accounting -- hard gate before
+  any batch run (P2-3). See TODO.md.
+- EVOLVE-BLOCK marker support (Phase D+)
+- Attempt Elo ranking for partial proof sketches (Phase D+)
+- AlphaProof Nexus unsolved batch runner (Phase D+, blocked on P2-3 cost gate)
+- Overnight job scheduler with budget cap (Phase D+, blocked on P2-3 cost gate)
+- `meta_mcp` and `advanced-memory-mcp` fleet integration (Phase D+)
+- Population-based agent (Agent D from AlphaProof Nexus) (Phase D+)
 
 ---
 

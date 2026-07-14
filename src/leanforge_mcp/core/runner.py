@@ -99,6 +99,9 @@ class Runner:
             await self.jobs.record_attempt(job_id, agent_index, turn, src, output, model, success)
             self._pub_attempt(job_id, agent_index, turn, output, model, success)
 
+        async def is_cancelled() -> bool:
+            return await self.jobs.is_cancel_requested(job_id)
+
         try:
             result = await run_parallel_agents(
                 source=lean_source,
@@ -107,6 +110,7 @@ class Runner:
                 n_agents=parallel_agents,
                 max_turns=max_turns,
                 on_attempt=on_attempt,
+                is_cancelled=is_cancelled,
             )
         except asyncio.CancelledError:
             await self.jobs.set_cancelled(job_id)
@@ -122,6 +126,16 @@ class Runner:
         if result and result.proven:
             await self.jobs.set_complete(job_id, result.final_source)
             self._pub(job_id, "complete")
+        elif await self.jobs.is_cancel_requested(job_id):
+            # Cross-process cancel (P1-6): every subagent independently
+            # observed the polled flag and returned non-proven, so
+            # run_parallel_agents fell through to its normal "no winner"
+            # path rather than raising CancelledError. Attribute the
+            # terminal status correctly regardless of which process set
+            # the flag or which process is finishing this job.
+            await self.jobs.set_cancelled(job_id)
+            self._pub(job_id, "cancelled")
+            logger.info("Job %s cancelled (cross-process request)", job_id)
         else:
             await self.jobs.set_failed(job_id)
             self._pub(job_id, "failed")
@@ -150,12 +164,33 @@ class Runner:
             )
 
     async def cancel(self, job_id: str) -> bool:
-        """Cancel a running job. Returns True if a live task was found."""
+        """Cancel a running job (docs/ASSESSMENT_2026-06-24.md P1-6).
+
+        Same-process fast path: if this process's own Runner has the live
+        asyncio.Task (the job was started here), cancel it directly --
+        immediate, via the existing CancelledError path in _run.
+
+        Cross-process path: ALWAYS also set the DB cancel_requested flag
+        when the job exists and is in a cancellable state, regardless of
+        whether a local task was found. Whichever process actually owns
+        the job polls this flag once per turn (see is_cancelled in _run)
+        and will stop within one turn. Returns True whenever the request
+        was meaningfully recorded (local cancel fired, OR the job exists
+        and was queued/running) -- callers should treat True as "the
+        cancellation will take effect", not "it already has".
+        """
         task = self._tasks.get(job_id)
         if task and not task.done():
             task.cancel()
+            await self.jobs.request_cancel(job_id)
             return True
-        return False
+
+        job = await self.jobs.get_job(job_id)
+        if job is None or job.status not in ("queued", "running"):
+            return False
+
+        await self.jobs.request_cancel(job_id)
+        return True
 
 
 def get_runner(ctx) -> Runner:

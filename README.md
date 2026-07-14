@@ -5,7 +5,7 @@
 [![Lean 4](https://img.shields.io/badge/Lean-4-orange)](https://lean-lang.org/)
 [![Mathlib](https://img.shields.io/badge/Mathlib-4-orange)](https://leanprover-community.github.io/mathlib4_docs/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Status: Phase A](https://img.shields.io/badge/status-Phase%20A%20complete-yellow)](docs/ASSESSMENT_2026-06-24.md)
+[![Status: Phase B complete](https://img.shields.io/badge/status-Phase%20B%20complete-brightgreen)](docs/ASSESSMENT_2026-06-24.md)
 [![AlphaProof Nexus](https://img.shields.io/badge/inspired%20by-AlphaProof%20Nexus-informational)](https://arxiv.org/abs/2605.22763)
 
 MCP server for AI-driven formal proof search in Lean 4. Submit a theorem with `sorry`; get back a machine-verified proof. Implements Agent A from [AlphaProof Nexus](https://arxiv.org/abs/2605.22763) (DeepMind, May 2026).
@@ -70,7 +70,7 @@ Then add to `claude_desktop_config.json`:
 }
 ```
 
-See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-time).
+See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-time -- already provisioned and verified on Goliath as of 2026-07-09).
 
 ---
 
@@ -136,41 +136,42 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 | Phase | What | Status |
 |-------|------|--------|
 | **A** | Core loop: LLM proposes, Lean judges, error feeds back | Done |
-| **B** | Correctness hardening, edge case handling, timeout tuning | In progress |
-| **C** | **Multi-agent parallel scheduling** (Agent B from paper) -- run N loops in parallel, first to finish wins | Planned |
-| **D** | **Self-critique step** -- LLM reviews its own proof before compile, catches obvious errors early | Planned |
-| **E** | **Webapp proof explorer** -- interactive tree view of attempted proof paths, live tactic streaming | Planned |
-| **F** | **Premise selection** -- before generating tactics, search Mathlib for relevant lemmas | Planned |
-| **G** | **Cumulative context windowing** -- smart summarization of long error chains instead of blind concatenation | Planned |
-| **H** | **Benchmark dashboard** -- webapp page tracking MiniF2F, PutnamBench, Erdős results per model/config | Stretch |
-| **I** | **Human-in-the-loop** -- when the agent is stuck, pause and surface the current state for a human hint | Stretch |
-| **J** | **Proof caching** -- deduplicate sub-proofs so repeated lemmas compile instantly | Stretch |
+| **B** | Correctness hardening, edge case handling, timeout tuning | **Done (2026-07-09)** -- tamper guard closed against default-arg truncation and a decoy-duplicate attack, cross-process job ownership/cancellation fixed, stateless-prompting mitigations added. 56/56 tests passing on real hardware. See [docs/ASSESSMENT_2026-06-24.md](docs/ASSESSMENT_2026-06-24.md) |
+| **C** | **Performance and safety**: REPL worker pool (compile-time is the real bottleneck), LLM timeout/retry, token/cost accounting (hard gate before any batch run) | In progress -- see [TODO.md](TODO.md) |
+| **D** | **Multi-agent parallel scheduling** (Agent B from paper) -- run N loops in parallel, first to finish wins | Planned |
+| **E** | **Self-critique step** -- LLM reviews its own proof before compile, catches obvious errors early | Planned |
+| **F** | **Webapp proof explorer** -- interactive tree view of attempted proof paths, live tactic streaming | Planned |
+| **G** | **Premise selection** -- before generating tactics, search Mathlib for relevant lemmas | Planned |
+| **H** | **Cumulative context windowing** -- smart summarization of long error chains instead of blind concatenation | Planned |
+| **I** | **Benchmark dashboard** -- webapp page tracking MiniF2F, PutnamBench, Erdős results per model/config | Stretch |
+| **J** | **Human-in-the-loop** -- when the agent is stuck, pause and surface the current state for a human hint | Stretch |
+| **K** | **Proof caching** -- deduplicate sub-proofs so repeated lemmas compile instantly | Stretch |
 
 ### What each phase enables
 
 **A + B** let you submit a theorem and get a proof back on the other end.
-It works, it's useful, but it's single-threaded and has no visibility into
-what the LLM is trying.
+It works, it's useful, but it's single-threaded, pays a full compile per
+turn, and has no spend controls -- Phase C closes those gaps.
 
-**C** changes the game: N parallel agents means wall-clock time drops from
+**D** changes the game: N parallel agents means wall-clock time drops from
 "however long one LLM takes" to "however long the fastest of N LLMs takes."
 For hard theorems where the LLM wanders into dead ends, this is the
 difference between 5 minutes and 30 seconds.
 
-**D** prevents the LLM from wasting compiles on obviously wrong tactics.
+**E** prevents the LLM from wasting compiles on obviously wrong tactics.
 Cheap to add (one extra LLM call per attempt) and the paper shows it
 improves solve rate by ~15 percentage points on Agent A alone.
 
-**E** is the user-facing payoff: instead of staring at "status: running"
+**F** is the user-facing payoff: instead of staring at "status: running"
 and polling, you watch the LLM try tactics in real time, see which paths
 it abandoned, and understand why it eventually succeeded or failed.
 
-**F** addresses the most common failure mode: the LLM writes a correct
+**G** addresses the most common failure mode: the LLM writes a correct
 tactic for a lemma that doesn't exist in the current context. Premise
 selection (a small retrieval step before tactic generation) cuts this
 dramatically.
 
-**G** is invisible but critical: as the LLM accumulates 10+ failed
+**H** is invisible but critical: as the LLM accumulates 10+ failed
 attempts, the error context grows past the model's window. Smart
 summarization keeps relevant signal without drowning the LLM in noise.
 
