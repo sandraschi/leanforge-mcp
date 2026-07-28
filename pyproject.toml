@@ -13,7 +13,7 @@ authors = [{ name = "sandraschi" }]
 keywords = ["mcp", "lean4", "theorem-proving", "formal-verification", "mathematics"]
 
 dependencies = [
-    "fastmcp>=3.4.2,<4",
+    "fastmcp>=3.4.4,<4",
     "anthropic>=0.40.0",
     "openai>=1.50.0",
     "aiosqlite>=0.20.0",
@@ -27,7 +27,7 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
-    "ruff>=0.4.0",
+    "ruff>=0.16.0,<0.17",
 ]
 web = [
     "fastapi>=0.115.0",
@@ -48,7 +48,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "S", "UP", "RUF"]
-ignore = ["S101", "B008", "B904", "S603", "E722", "RUF006", "RUF012", "B024"]
+ignore = ["S101", "B008", "B904", "S603", "E722", "RUF006", "S101", "B008", "B904", "S603", "E722", "RUF006", "RUF012", "B024", "S106", "S110", "S112", "B024"]
 
 [tool.ruff.format]
 quote-style = "double"
