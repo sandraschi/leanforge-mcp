@@ -52,9 +52,7 @@ class SubmitTheoremInput(BaseModel):
 
 
 class SubmitLeanFileInput(BaseModel):
-    lean_source: str = Field(
-        description="Complete Lean 4 source file with sorry placeholders to fill."
-    )
+    lean_source: str = Field(description="Complete Lean 4 source file with sorry placeholders to fill.")
     description: str = Field(default="")
     tier: Annotated[int, Field(ge=1, le=3)] = Field(default=1)
     parallel_agents: Annotated[int, Field(ge=1, le=16)] = Field(default=4)

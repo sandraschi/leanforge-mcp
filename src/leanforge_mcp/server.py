@@ -11,7 +11,6 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
-from typing import Any
 
 from fastmcp import FastMCP
 from fastmcp.server.lifespan import lifespan as fastmcp_lifespan
@@ -123,6 +122,7 @@ async def list_skills() -> str:
         return "[]"
     skills = [p.parent.name for p in _SKILL_DIR.rglob("SKILL.md")]
     import json
+
     return json.dumps(skills)
 
 
@@ -133,18 +133,22 @@ async def list_skills() -> str:
 async def lean_help(topic: str = "") -> str:
     """Get help with a Lean concept, tactic, or error."""
     if not topic:
-        return ("I can help with Lean 4. Ask about tactics (simp, omega, ring, "
-                "linarith), syntax (calc blocks, match expressions), common errors, "
-                "or Mathlib lemmas. What would you like to know?")
+        return (
+            "I can help with Lean 4. Ask about tactics (simp, omega, ring, "
+            "linarith), syntax (calc blocks, match expressions), common errors, "
+            "or Mathlib lemmas. What would you like to know?"
+        )
     return f"Here's what I know about '{topic}' in Lean 4.\n\nConsulting skill context...\n\nUse `get_mathlib_search` to find relevant lemmas."
 
 
 @mcp.prompt()
 async def theorem_coaching() -> str:
     """Get step-by-step guidance through a Lean proof."""
-    return ("I'll help you write a Lean 4 proof. Describe the theorem you're trying "
-            "to prove, what you've tried, and where you're stuck. I can suggest "
-            "tactics, lemmas from Mathlib, and proof strategies.")
+    return (
+        "I'll help you write a Lean 4 proof. Describe the theorem you're trying "
+        "to prove, what you've tried, and where you're stuck. I can suggest "
+        "tactics, lemmas from Mathlib, and proof strategies."
+    )
 
 
 def main() -> None:

@@ -1,3 +1,5 @@
+set windows-shell := ["powershell.exe", "-NoProfile", "-Command"]
+
 # leanforge-mcp justfile
 import 'scripts/just/fleet.just'
 # leanforge-mcp justfile
@@ -47,7 +49,7 @@ smoke:
 # Build frontend for production
 build-web:
     Set-Location '{{justfile_directory()}}\webapp\frontend' && npm install && npm run build
-# ── Playwright E2E ─────────────────────────────────────────────────────
+# --- Playwright E2E ---
 
 # Install Playwright browsers (one-time)
 e2e-install:
@@ -59,3 +61,9 @@ e2e:
     cd {{REPO}}\webapp/frontend
     npx playwright test
 
+
+# Bootstrap: install dev deps + pre-commit hook
+bootstrap:
+    uv sync --group dev
+    uv run pre-commit install
+    Write-Host "Pre-commit hooks installed." -ForegroundColor Green

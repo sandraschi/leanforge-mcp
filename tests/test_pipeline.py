@@ -5,6 +5,7 @@ Pipeline tests -- run with: uv run pytest tests/ -v
 from __future__ import annotations
 
 import pytest
+
 from leanforge_mcp.core.agent import _apply_edit, _statement_hash, extract_statement
 
 
@@ -56,11 +57,7 @@ def test_extract_statement_multiline():
 
 
 def test_statement_hash_multiline_detects_change():
-    s1 = (
-        "theorem foo\n"
-        "    (n : ℕ) : n + 0 = n := by\n"
-        "  sorry\n"
-    )
+    s1 = "theorem foo\n    (n : ℕ) : n + 0 = n := by\n  sorry\n"
     s2 = (
         "theorem foo\n"
         "    (n : ℕ) : n + 1 = n := by\n"  # changed conclusion
@@ -71,6 +68,7 @@ def test_statement_hash_multiline_detects_change():
 
 def test_diagnostic_block_regex():
     from leanforge_mcp.core.lean_client import DIAGNOSTIC_BLOCK
+
     text = (
         "Compiling...\n"
         "File.lean:10:4: error: type mismatch\n"
@@ -92,6 +90,7 @@ def test_diagnostic_block_regex():
 @pytest.mark.asyncio
 async def test_lean_client_background_setup_scheduling(tmp_path):
     import asyncio
+
     from leanforge_mcp.core.lean_client import LeanClient
 
     lake_path = tmp_path / "bin" / "lake.exe"
@@ -120,5 +119,3 @@ async def test_lean_client_background_setup_scheduling(tmp_path):
 
     assert not client.setup_in_progress
     assert client.setup_status == "Ready"
-
-

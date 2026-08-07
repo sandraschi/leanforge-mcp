@@ -223,6 +223,4 @@ def get_runner(ctx) -> Runner:
         pass
     if _runner_fallback is not None:
         return _runner_fallback
-    raise RuntimeError(
-        "Runner not found in lifespan context. Server may not have completed startup."
-    )
+    raise RuntimeError("Runner not found in lifespan context. Server may not have completed startup.")

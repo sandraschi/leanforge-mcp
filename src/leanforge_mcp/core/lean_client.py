@@ -34,7 +34,7 @@ SORRY_TACTIC = re.compile(r"(^|\s):=\s*by\b[\s\S]*?\bsorry\b|^\s*sorry\s*$", re.
 
 DIAGNOSTIC_BLOCK = re.compile(
     r"^(.+?:\d+:\d+:\s*(?:error|warning|info):\s*[\s\S]*?)(?=\n(?:.+?:\d+:\d+:\s*(?:error|warning|info):|\Z))",
-    re.MULTILINE | re.IGNORECASE
+    re.MULTILINE | re.IGNORECASE,
 )
 
 
@@ -114,9 +114,7 @@ class LeanClient:
                 )
 
                 try:
-                    stdout_bytes, stderr_bytes = await asyncio.wait_for(
-                        proc.communicate(), timeout=self.timeout
-                    )
+                    stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=self.timeout)
                 except TimeoutError:
                     proc.kill()
                     await proc.communicate()
@@ -222,9 +220,7 @@ class LeanClient:
                     ps1_path = Path(tmpdir) / "elan-init.ps1"
                     url = "https://elan.lean-lang.org/elan-init.ps1"
                     loop = asyncio.get_running_loop()
-                    await loop.run_in_executor(
-                        None, urllib.request.urlretrieve, url, str(ps1_path)
-                    )
+                    await loop.run_in_executor(None, urllib.request.urlretrieve, url, str(ps1_path))
 
                     if not ps1_path.exists():
                         raise RuntimeError("Failed to download elan-init.ps1")
@@ -232,10 +228,14 @@ class LeanClient:
                     # Run installer silently with NoPrompt
                     proc = await asyncio.create_subprocess_exec(
                         "powershell.exe",
-                        "-ExecutionPolicy", "Bypass",
-                        "-File", str(ps1_path),
-                        "-NoPrompt", "1",
-                        "-DefaultToolchain", "stable",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(ps1_path),
+                        "-NoPrompt",
+                        "1",
+                        "-DefaultToolchain",
+                        "stable",
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.PIPE,
                     )

@@ -45,14 +45,10 @@ class LLMClient:
 
     async def maybe_escalate(self, turn: int) -> None:
         if self._current_tier == 1 and turn >= self.escalate_to_tier2_after:
-            logger.info(
-                "Escalating to tier 2 at turn %d (model: %s)", turn, self.config.tier2.model
-            )
+            logger.info("Escalating to tier 2 at turn %d (model: %s)", turn, self.config.tier2.model)
             self._current_tier = 2
         elif self._current_tier == 2 and turn >= self.escalate_to_tier3_after:
-            logger.info(
-                "Escalating to tier 3 at turn %d (model: %s)", turn, self.config.tier3.model
-            )
+            logger.info("Escalating to tier 3 at turn %d (model: %s)", turn, self.config.tier3.model)
             self._current_tier = 3
 
     async def complete(self, system: str, user: str) -> str:
@@ -68,9 +64,7 @@ class LLMClient:
         if cfg.api_key_env:
             api_key = os.environ.get(cfg.api_key_env, "")
             if not api_key:
-                raise ValueError(
-                    f"API key environment variable {cfg.api_key_env!r} is not set."
-                )
+                raise ValueError(f"API key environment variable {cfg.api_key_env!r} is not set.")
         client = AsyncOpenAI(api_key=api_key, base_url=cfg.base_url)
         response = await client.chat.completions.create(
             model=cfg.model,
@@ -88,9 +82,7 @@ class LLMClient:
     async def _complete_anthropic(self, cfg: LLMTierConfig, system: str, user: str) -> str:
         api_key = os.environ.get(cfg.api_key_env, "")
         if not api_key:
-            raise ValueError(
-                f"Anthropic API key not set. Set environment variable: {cfg.api_key_env}"
-            )
+            raise ValueError(f"Anthropic API key not set. Set environment variable: {cfg.api_key_env}")
         client = anthropic.AsyncAnthropic(api_key=api_key)
         message = await client.messages.create(
             model=cfg.model,

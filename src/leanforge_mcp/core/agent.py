@@ -282,12 +282,10 @@ async def run_subagent(
             # of what was already tried, so the model can loop on the same
             # failing tactic. Cap at the most recent 8 to bound prompt growth.
             strategies_block = "\n".join(
-                f"- `{tactic}` -> {error_class}"
-                for tactic, error_class in failed_strategies[-8:]
+                f"- `{tactic}` -> {error_class}" for tactic, error_class in failed_strategies[-8:]
             )
             user_message += (
-                f"\n\nStrategies already tried and failed this session "
-                f"(do NOT repeat these):\n{strategies_block}"
+                f"\n\nStrategies already tried and failed this session (do NOT repeat these):\n{strategies_block}"
             )
 
         try:
@@ -296,9 +294,7 @@ async def run_subagent(
             logger.warning("Subagent %d LLM error at turn %d: %s", agent_index, turn, exc)
             last_error = f"LLM error: {exc}"
             if on_attempt:
-                await on_attempt(
-                    agent_index, turn, source, f"LLM_ERROR: {exc}", model_used, False
-                )
+                await on_attempt(agent_index, turn, source, f"LLM_ERROR: {exc}", model_used, False)
             await llm.maybe_escalate(turn)
             continue
 
@@ -308,9 +304,7 @@ async def run_subagent(
         if stuck_match:
             note = stuck_match.group(1)[:200]
             logger.info("Subagent %d stuck at turn %d: %s", agent_index, turn, note)
-            last_error = (
-                f"Previous strategy failed. Try a completely different approach.\nYour note: {note}"
-            )
+            last_error = f"Previous strategy failed. Try a completely different approach.\nYour note: {note}"
             att = Attempt(turn, source, "STUCK", model_used, False, "(stuck -- no edit)")
             attempts.append(att)
             if on_attempt:
@@ -320,9 +314,7 @@ async def run_subagent(
 
         if not replace_match:
             logger.debug("Subagent %d no edit parsed at turn %d", agent_index, turn)
-            last_error = (
-                "Could not parse your response. Use the <<<REPLACE...REPLACE>>> format exactly."
-            )
+            last_error = "Could not parse your response. Use the <<<REPLACE...REPLACE>>> format exactly."
             if on_attempt:
                 await on_attempt(agent_index, turn, source, "PARSE_ERROR", model_used, False)
             await llm.maybe_escalate(turn)
@@ -344,9 +336,7 @@ async def run_subagent(
                 "different tactic or approach, not resend the same edit."
             )
             if on_attempt:
-                await on_attempt(
-                    agent_index, turn, source, "REPEATED_EDIT_SKIPPED", model_used, False
-                )
+                await on_attempt(agent_index, turn, source, "REPEATED_EDIT_SKIPPED", model_used, False)
             await llm.maybe_escalate(turn)
             continue
 
@@ -382,9 +372,7 @@ async def run_subagent(
             )
             seen_edits[edit_key] = last_error
             if on_attempt:
-                await on_attempt(
-                    agent_index, turn, source, f"TAMPER_REJECTED: {violation}", model_used, False
-                )
+                await on_attempt(agent_index, turn, source, f"TAMPER_REJECTED: {violation}", model_used, False)
             continue
 
         source = new_source
@@ -453,9 +441,7 @@ async def run_parallel_agents(
     by checking the same flag after this returns.
     """
     tasks = [
-        asyncio.create_task(
-            run_subagent(i, source, llm_factory(), lean, max_turns, on_attempt, is_cancelled)
-        )
+        asyncio.create_task(run_subagent(i, source, llm_factory(), lean, max_turns, on_attempt, is_cancelled))
         for i in range(n_agents)
     ]
 

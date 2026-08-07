@@ -98,9 +98,7 @@ def _from_dict(cls, data: dict):
     for f in dataclasses.fields(cls):
         if f.name in data:
             val = data[f.name]
-            if dataclasses.is_dataclass(f.type) or (
-                isinstance(f.type, type) and dataclasses.is_dataclass(f.type)
-            ):
+            if dataclasses.is_dataclass(f.type) or (isinstance(f.type, type) and dataclasses.is_dataclass(f.type)):
                 kwargs[f.name] = _from_dict(f.type, val)
             else:
                 kwargs[f.name] = val
@@ -114,9 +112,7 @@ def load_config(path: Path) -> Config:
     config = Config()
 
     if "lean" in raw:
-        config.lean = LeanConfig(
-            **{k: v for k, v in raw["lean"].items() if k in LeanConfig.__dataclass_fields__}
-        )
+        config.lean = LeanConfig(**{k: v for k, v in raw["lean"].items() if k in LeanConfig.__dataclass_fields__})
     if "database" in raw:
         config.database = DatabaseConfig(**raw["database"])
     if "agent" in raw:

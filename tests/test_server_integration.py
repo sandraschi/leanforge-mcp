@@ -37,6 +37,7 @@ EXPECTED_TOOLS = {
 @pytest.fixture(autouse=True)
 def skip_lean_workspace_smoke(monkeypatch):
     """Lifespan calls ensure_workspace() which compiles Mathlib (~minutes). Stub it."""
+
     async def _fast_ok(self):
         return True, "Workspace OK (integration test stub)"
 
@@ -68,9 +69,7 @@ async def test_lifespan_runner_reachable_from_mounted_tool():
         payload = getattr(result, "data", None)
         if payload is None:
             blocks = getattr(result, "content", []) or []
-            text = next(
-                (b.text for b in blocks if getattr(b, "text", None)), None
-            )
+            text = next((b.text for b in blocks if getattr(b, "text", None)), None)
             assert text is not None, "list_jobs returned no content"
             payload = json.loads(text)
         assert "count" in payload, f"Unexpected list_jobs payload: {payload!r}"
@@ -80,15 +79,11 @@ async def test_lifespan_runner_reachable_from_mounted_tool():
 async def test_get_proof_status_unknown_job():
     """Unknown job id must return a structured error, not raise."""
     async with Client(mcp) as client:
-        result = await client.call_tool(
-            "get_proof_status", {"job_id": "00000000-0000-0000-0000-000000000000"}
-        )
+        result = await client.call_tool("get_proof_status", {"job_id": "00000000-0000-0000-0000-000000000000"})
         payload = getattr(result, "data", None)
         if payload is None:
             blocks = getattr(result, "content", []) or []
-            text = next(
-                (b.text for b in blocks if getattr(b, "text", None)), None
-            )
+            text = next((b.text for b in blocks if getattr(b, "text", None)), None)
             payload = json.loads(text) if text else {}
         assert "error" in payload
 
@@ -96,6 +91,7 @@ async def test_get_proof_status_unknown_job():
 async def test_tools_return_pending_during_setup():
     """Tools must return a structured pending status if setup_in_progress is True."""
     from leanforge_mcp.core.runner import _runner_fallback
+
     if _runner_fallback and _runner_fallback.lean:
         original_state = _runner_fallback.lean.setup_in_progress
         original_status = _runner_fallback.lean.setup_status
@@ -115,16 +111,13 @@ async def test_tools_return_pending_during_setup():
                 payload = getattr(result, "data", None)
                 if payload is None:
                     blocks = getattr(result, "content", []) or []
-                    text = next(
-                        (b.text for b in blocks if getattr(b, "text", None)), None
-                    )
+                    text = next((b.text for b in blocks if getattr(b, "text", None)), None)
                     payload = json.loads(text) if text else {}
                 assert payload.get("status") == "pending"
                 assert "Mock installing..." in payload.get("message", "")
         finally:
             _runner_fallback.lean.setup_in_progress = original_state
             _runner_fallback.lean.setup_status = original_status
-
 
 
 if __name__ == "__main__":

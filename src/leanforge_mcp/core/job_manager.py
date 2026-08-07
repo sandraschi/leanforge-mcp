@@ -172,13 +172,9 @@ class JobManager:
             # STILL-LIVE other process (P1-4) is left alone -- the other
             # process's own Runner is still working on it.
             db.row_factory = aiosqlite.Row
-            async with db.execute(
-                "SELECT id, owner_pid, owner_started_at FROM jobs WHERE status='running'"
-            ) as cursor:
+            async with db.execute("SELECT id, owner_pid, owner_started_at FROM jobs WHERE status='running'") as cursor:
                 running = await cursor.fetchall()
-            orphaned = [
-                r["id"] for r in running if not self._owner_alive(r["owner_pid"], r["owner_started_at"])
-            ]
+            orphaned = [r["id"] for r in running if not self._owner_alive(r["owner_pid"], r["owner_started_at"])]
             if orphaned:
                 now = self._now()
                 await db.executemany(
@@ -189,9 +185,7 @@ class JobManager:
                 logger.info("Marked %d orphaned running job(s) as interrupted", len(orphaned))
             still_owned = len(running) - len(orphaned)
             if still_owned:
-                logger.info(
-                    "%d running job(s) still owned by a live process -- left alone", still_owned
-                )
+                logger.info("%d running job(s) still owned by a live process -- left alone", still_owned)
         logger.info("JobManager initialised at %s (pid=%s)", self.db_path, self._own_pid)
 
     def _now(self) -> str:
@@ -285,9 +279,7 @@ class JobManager:
     async def is_cancel_requested(self, job_id: str) -> bool:
         async with aiosqlite.connect(self.db_path) as db:
             await self._configure_db(db)
-            async with db.execute(
-                "SELECT cancel_requested FROM jobs WHERE id=?", (job_id,)
-            ) as cursor:
+            async with db.execute("SELECT cancel_requested FROM jobs WHERE id=?", (job_id,)) as cursor:
                 row = await cursor.fetchone()
         return bool(row and row[0])
 
@@ -378,9 +370,7 @@ class JobManager:
     async def get_job_counts(self) -> dict[str, int]:
         async with aiosqlite.connect(self.db_path) as db:
             await self._configure_db(db)
-            async with db.execute(
-                "SELECT status, COUNT(*) FROM jobs GROUP BY status"
-            ) as cursor:
+            async with db.execute("SELECT status, COUNT(*) FROM jobs GROUP BY status") as cursor:
                 rows = await cursor.fetchall()
             counts = {status: count for status, count in rows}
             counts["total"] = sum(counts.values())
