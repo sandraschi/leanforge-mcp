@@ -32,7 +32,7 @@ from webapp.backend.event_bus import JobEventBus
 from webapp.backend.routes import docs, jobs, problems, skills, status, stream
 
 CONFIG_PATH = Path(__file__).parent.parent.parent / "config.toml"
-BACKEND_PORT = 10855
+BACKEND_PORT = 10867
 
 logger = logging.getLogger("leanforge.web")
 

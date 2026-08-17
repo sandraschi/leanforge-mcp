@@ -140,7 +140,7 @@ Each turn sends only the current file + last error. The model will happily retry
 
 The webapp backend instantiates its **own** Runner/LeanClient against the shared DB. Consequences beyond P1-4/P1-6: doubled Mathlib RAM if both compile, split task registries, two sources of truth for "running".
 
-**Recommended direction (after P0/P1):** invert the topology -- one long-lived **leanforge daemon** (the FastAPI process is the natural host) owns the Runner and all compilation; the stdio MCP server becomes a thin client calling the daemon's REST API (localhost:10855). This matches the federation-hub direction, makes Claude Desktop restarts free (jobs survive), and kills the entire class of cross-process bugs. Effort: ~1 day. Until then, P1-4 + P1-6 mitigations make coexistence safe.
+**Recommended direction (after P0/P1):** invert the topology -- one long-lived **leanforge daemon** (the FastAPI process is the natural host) owns the Runner and all compilation; the stdio MCP server becomes a thin client calling the daemon's REST API (localhost:10867). This matches the federation-hub direction, makes Claude Desktop restarts free (jobs survive), and kills the entire class of cross-process bugs. Effort: ~1 day. Until then, P1-4 + P1-6 mitigations make coexistence safe.
 
 ---
 

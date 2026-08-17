@@ -141,7 +141,7 @@ function Hero({ status, backendUp }: { status: SystemStatus | null; backendUp: b
           <StatCard label="failed" value={status.jobs.failed} />
           <StatCard label="parallel agents" value={status.config.parallel_agents} sub="default" />
           <StatCard label="max turns" value={status.config.max_turns} sub="per agent" />
-          <StatCard label="tier-1 model" value={status.config.tier1_model.split(":")[0]} sub={status.config.tier1_model.split(":")[1] ?? ""} />
+          <StatCard label="tier-1 model" value={status.config.tier1_model.split(":")[0] ?? ""} sub={status.config.tier1_model.split(":")[1] ?? ""} />
         </div>
       ) : backendUp ? (
         <div className="text-xs text-gray-600 mb-4">Loading system status…</div>

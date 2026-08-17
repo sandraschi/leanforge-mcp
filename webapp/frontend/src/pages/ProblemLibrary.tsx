@@ -47,7 +47,7 @@ export default function ProblemLibrary() {
 
   const handleSubmitJob = async (p: Problem) => {
     const source = p.lean_source || `import Mathlib\n\ntheorem ${p.title.replace(/\s+/g, "_")} : ${p.statement} := by\n  sorry\n`;
-    const res = await fetch(API_BASE + "/api/jobs", {
+    const res = await fetch(API_BASE + "/jobs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ statement: p.statement, lean_stub: source }),

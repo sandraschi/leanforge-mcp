@@ -20,7 +20,7 @@ web:
 
 # Run web frontend only (Vite dev)
 web-frontend:
-    Set-Location '{{justfile_directory()}}\webapp\frontend' && npx vite --port 10856 --host
+    Set-Location '{{justfile_directory()}}\webapp\frontend' && npx vite --port 10868 --host
 
 # Run both backend + frontend with auto-open
 web-dev:

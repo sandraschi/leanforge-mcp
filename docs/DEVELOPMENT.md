@@ -56,8 +56,8 @@ src/leanforge_mcp/
     control.py        cancel_job
     mathlib.py        get_mathlib_search
 webapp/
-  backend/            FastAPI backend (port 10855)
-  frontend/           Vite/React dashboard (port 10856)
+  backend/            FastAPI backend (port 10867)
+  frontend/           Vite/React dashboard (port 10868)
 scripts/
   smoke_test.py       Standalone validation script (run before Cursor tasks)
 tests/

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-const BE = http://127.0.0.1:10855;
-const FE = http://127.0.0.1:10856;
+const BE = http://127.0.0.1:10867;
+const FE = http://127.0.0.1:10868;
 test.describe('Fleet Audit', () => {
     test('Backend health', async ({ request }) => {
         const resp = await request.get(BE + '/health');

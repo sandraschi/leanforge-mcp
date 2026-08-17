@@ -6,8 +6,8 @@ $ErrorActionPreference = "Stop"
 $ScriptRoot = Split-Path -Parent $PSCommandPath
 $RepoRoot = Resolve-Path "$ScriptRoot/.."
 $FrontRoot = Join-Path $ScriptRoot "frontend"
-$BackendPort = 10855
-$FrontendPort = 10856
+$BackendPort = 10867
+$FrontendPort = 10868
 
 function Require-Command {
     param([string]$Cmd, [string]$WingetId, [string]$Label)
@@ -86,7 +86,7 @@ Get-NetTCPConnection -LocalPort $FrontendPort -ErrorAction SilentlyContinue |
 # SS5 -- surfaces a startup crash immediately instead of a 60s health timeout)
 $uvExe = (Get-Command uv).Source
 Push-Location $RepoRoot
-& $uvExe run python -c "import webapp.backend.main; print('  [ok] Import OK')"
+& $uvExe run --extra web python -c "import webapp.backend.main; print('  [ok] Import OK')"
 $importOk = ($LASTEXITCODE -eq 0)
 Pop-Location
 if (-not $importOk) {
@@ -98,7 +98,7 @@ if (-not $importOk) {
 $BackendJob = Start-Job -Name "backend" -ScriptBlock {
     param($Root, $Port)
     Set-Location $Root
-    uv run python -m webapp.backend.main
+    uv run --extra web python -m webapp.backend.main
 } -ArgumentList $RepoRoot, $BackendPort
 
 # Wait for backend

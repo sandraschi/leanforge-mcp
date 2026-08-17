@@ -83,7 +83,7 @@ environment variables (via Claude Desktop's `env` block or your shell).
 |-----|---------|-------------|
 | `transport` | `stdio` | Use `stdio` for Claude Desktop. `http` for the webapp backend. |
 | `host` | `127.0.0.1` | Bind address for HTTP transport. |
-| `port` | `8765` | Port for HTTP transport. The webapp backend uses its own port (10855). |
+| `port` | `8765` | Port for HTTP transport. The webapp backend uses its own port (10867). |
 
 ---
 
