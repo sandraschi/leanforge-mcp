@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.sandraschi/leanforge-mcp",
+  "description": "MCP server for AI-driven formal proof search in Lean 4",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/sandraschi/leanforge-mcp",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/sandraschi/leanforge-mcp/releases/download/v0.1.0/leanforge-mcp-v0.1.0.mcpb",
+      "fileSha256": "267c7214023a51328495d0dbd0354364dab7d91abb7b50595d0fb889ac78f00f",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
