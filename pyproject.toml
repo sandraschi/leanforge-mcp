@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "leanforge-mcp"
 version = "0.1.0"
-description = "MCP server for AI-driven formal proof search in Lean 4"
+description = "Lean 4 theorem prover MCP: automated proof search, mathlib integration, job management"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
