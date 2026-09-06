@@ -2,6 +2,9 @@ set windows-shell := ["powershell.exe", "-NoProfile", "-Command"]
 
 # leanforge-mcp justfile
 import 'scripts/just/fleet.just'
+
+REPO := justfile_directory()
+
 # leanforge-mcp justfile
 default:
     just --list
@@ -16,15 +19,15 @@ serve:
 
 # Run web backend + frontend
 web:
-    Set-Location '{{justfile_directory()}}' && uv run python -m webapp.backend.main
+    Set-Location '{{justfile_directory()}}'; uv run python -m webapp.backend.main
 
 # Run web frontend only (Vite dev)
 web-frontend:
-    Set-Location '{{justfile_directory()}}\webapp\frontend' && npx vite --port 10868 --host
+    Set-Location '{{justfile_directory()}}\webapp\frontend'; npx vite --port 10868 --host
 
 # Run both backend + frontend with auto-open
 web-dev:
-    cd webapp && .\start.ps1
+    cd webapp; .\start.ps1
 
 # Lint
 lint:
@@ -48,13 +51,12 @@ smoke:
 
 # Build frontend for production
 build-web:
-    Set-Location '{{justfile_directory()}}\webapp\frontend' && npm install && npm run build
+    Set-Location '{{justfile_directory()}}\webapp\frontend'; npm install; npm run build
 # --- Playwright E2E ---
 
 # Install Playwright browsers (one-time)
 e2e-install:
-    cd {{REPO}}\webapp/frontend
-    npx playwright install chromium
+    cd {{REPO}}\webapp/frontend; npx playwright install chromium
 
 # Run Playwright E2E smoke tests (start backend first: just serve)
 e2e:
