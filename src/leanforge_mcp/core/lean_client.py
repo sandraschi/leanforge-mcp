@@ -25,12 +25,39 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-WARNING_SORRY = "declaration uses 'sorry'"
+# Lean's sorry warning. The quoting style around `sorry` is NOT stable across
+# Lean versions: Lean 4.31 emits backticks (declaration uses `sorry`), older
+# releases used straight quotes ('sorry'). Matching one literal spelling made
+# has_sorry silently always-False, which reported `sorry` proofs as PROVEN --
+# an inverted oracle. Match any quoting, and never go back to a bare literal.
+WARNING_SORRY_RE = re.compile(
+    r"declaration\s+uses\s+[`'\"\u2018\u2019\u201c\u201d]?sorry[`'\"\u2018\u2019\u201c\u201d]?",
+    re.IGNORECASE,
+)
+
 # A proof file still containing an unfilled `sorry` tactic. We rely PRIMARILY on
 # the compiler warning, not source regex (a comment containing "sorry" must not
-# count). This pattern is only a secondary guard for the specific case where the
-# warning is suppressed.
+# count). This pattern is a secondary guard for the case where the warning is
+# suppressed or renamed upstream; it is applied to a comment- and string-stripped
+# view of the source (see _sorry_in_code) so prose can never trip it.
 SORRY_TACTIC = re.compile(r"(^|\s):=\s*by\b[\s\S]*?\bsorry\b|^\s*sorry\s*$", re.MULTILINE)
+
+
+def _sorry_in_code(source: str) -> bool:
+    """True if an unfilled `sorry` appears in real code (not comments/strings).
+
+    Uses the lexer's code mask so that a doc comment mentioning sorry, or a
+    string literal containing it, cannot produce a false positive.
+    """
+    try:
+        from leanforge_mcp.core.lean_lexer import _scan_code_mask
+
+        is_code, _ = _scan_code_mask(source)
+        masked = "".join(ch if is_code[i] else " " for i, ch in enumerate(source))
+    except Exception:  # lexer must never make compilation fail
+        logger.exception("code-mask failed; falling back to raw source for sorry guard")
+        masked = source
+    return bool(SORRY_TACTIC.search(masked))
 
 DIAGNOSTIC_BLOCK = re.compile(
     r"^(.+?:\d+:\d+:\s*(?:error|warning|info):\s*[\s\S]*?)(?=\n(?:.+?:\d+:\d+:\s*(?:error|warning|info):|\Z))",
@@ -133,7 +160,10 @@ class LeanClient:
 
                 errors = self._extract(combined, "error")
                 warnings = self._extract(combined, "warning")
-                has_sorry = WARNING_SORRY in combined
+                # Primary oracle: the compiler's own warning. Secondary guard:
+                # an unfilled sorry still present in real code. Either one is
+                # enough to refuse to call this proven.
+                has_sorry = bool(WARNING_SORRY_RE.search(combined)) or _sorry_in_code(source)
                 success = proc.returncode == 0 and not errors
 
                 return CompileResult(
