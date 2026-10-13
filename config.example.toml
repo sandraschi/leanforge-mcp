@@ -2,16 +2,21 @@
 # Copy to config.toml and fill in your values
 
 [lean]
+# Path settings below are commented out: the defaults work on any machine.
+# Uncomment only to override them (absolute paths).
+
 # Absolute path to LAKE executable (not lean) -- we run `lake env lean` so Mathlib resolves
-lake_path = "C:\\Users\\sandr\\.elan\\bin\\lake.exe"
+# Default: %USERPROFILE%\.elan\bin\lake.exe (where elan-init installs it)
+# lake_path = "C:\\path\\to\\.elan\\bin\\lake.exe"
 
 # Lake project with Mathlib dependency + cached oleans. ONE-TIME SETUP:
-#   cd D:\Dev\repos\leanforge-mcp\workspace
+#   cd <repo>\workspace
 #   lake new leanforge_workspace math
 #   cd leanforge_workspace
 #   lake exe cache get      (downloads ~4GB precompiled Mathlib)
 #   lake build
-workspace_dir = "D:\\Dev\\repos\\leanforge-mcp\\workspace\\leanforge_workspace"
+# Default: <repo>\workspace\leanforge_workspace
+# workspace_dir = "C:\\path\\to\\leanforge_workspace"
 
 # Per-compile timeout in seconds (Mathlib compiles are slow; 120 is reasonable)
 compile_timeout = 120
@@ -23,7 +28,8 @@ max_concurrent_compiles = 4
 retain_workspace = false
 
 [database]
-path = "D:\\Dev\\repos\\leanforge-mcp\\data\\jobs.db"
+# Default: <repo>\data\jobs.db
+# path = "C:\\path\\to\\jobs.db"
 
 [agent]
 # Default number of parallel subagents per job
@@ -71,4 +77,5 @@ port = 8765
 
 [logging]
 level = "INFO"
-log_file = "D:\\Dev\\repos\\leanforge-mcp\\logs\\leanforge.log"
+# Default: <repo>\logs\leanforge.log
+# log_file = "C:\\path\\to\\leanforge.log"

@@ -6,13 +6,17 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+# Repo checkout root (src/leanforge_mcp/core/config.py -> parents[3]).
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+
 
 @dataclass
 class LeanConfig:
     # We invoke `lake env lean <file>`, not `lean` directly, so Mathlib resolves.
-    lake_path: str = r"C:\Users\sandr\.elan\bin\lake.exe"
+    # Default is where elan-init installs it for the current user.
+    lake_path: str = str(Path.home() / ".elan" / "bin" / "lake.exe")
     # Lake project dir with Mathlib dependency + cached oleans (one-time setup).
-    workspace_dir: str = r"D:\Dev\repos\leanforge-mcp\workspace\leanforge_workspace"
+    workspace_dir: str = str(_REPO_ROOT / "workspace" / "leanforge_workspace")
     compile_timeout: int = 120
     # Cap concurrent Lean processes -- each loads Mathlib, uses GBs of RAM.
     max_concurrent_compiles: int = 4
@@ -21,7 +25,7 @@ class LeanConfig:
 
 @dataclass
 class DatabaseConfig:
-    path: str = r"D:\Dev\repos\leanforge-mcp\data\jobs.db"
+    path: str = str(_REPO_ROOT / "data" / "jobs.db")
 
 
 @dataclass
@@ -75,7 +79,7 @@ class ServerConfig:
 @dataclass
 class LoggingConfig:
     level: str = "INFO"
-    log_file: str = r"D:\Dev\repos\leanforge-mcp\logs\leanforge.log"
+    log_file: str = str(_REPO_ROOT / "logs" / "leanforge.log")
 
 
 @dataclass
