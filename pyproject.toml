@@ -57,3 +57,10 @@ indent-style = "space"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pillow>=12.3.0",
+    "pytesseract>=0.3.13",
+    "pywinauto>=0.6.9",
+]
