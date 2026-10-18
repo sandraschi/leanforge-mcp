@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -99,4 +98,63 @@ async def status(request: Request):
             "interrupted": counts.get("interrupted", 0),
             "live_tasks": len(runner._tasks),
         },
+    }
+
+
+MCP_TOOLS = [
+    {
+        "name": "submit_theorem",
+        "description": "Submit a theorem statement for proof search; returns a job_id immediately.",
+    },
+    {
+        "name": "submit_lean_file",
+        "description": "Submit a complete Lean file with sorry placeholders; returns a job_id.",
+    },
+    {"name": "get_proof_status", "description": "Poll a job; returns the proof when complete."},
+    {"name": "list_attempts", "description": "Inspect the per-agent attempt trajectory of a job."},
+    {"name": "list_jobs", "description": "List jobs with status summary."},
+    {"name": "validate_lean", "description": "Raw Lean 4 compile with no job tracking."},
+    {"name": "verify_proof", "description": "Re-verify a proven file with independent verified kernels."},
+    {"name": "cancel_job", "description": "Cancel a running proof search job."},
+    {"name": "leanforge_shutdown", "description": "Gracefully shut down the server."},
+    {"name": "get_mathlib_search", "description": "Natural-language search over Mathlib theorems."},
+]
+
+
+@router.get("/api/capabilities")
+async def capabilities():
+    """Standard capability shape consumed by fleet hubs and the Tools page."""
+    return {
+        "server": "leanforge-mcp",
+        "version": VERSION,
+        "transport": "stdio (MCP) + HTTP (this backend)",
+        "tools": MCP_TOOLS,
+    }
+
+
+@router.get("/api/v1/diagnostics")
+async def diagnostics(request: Request):
+    """Full diagnostics for CUA-NSIS smoke testing: tools, system, log errors."""
+    runner = request.app.state.runner
+    lean_ws = _get_dynamic_workspace_status(runner)
+    counts = await runner.jobs.get_job_counts()
+
+    log_path = Path(runner.config.logging.log_file)
+    recent_errors: list[str] = []
+    if log_path.exists():
+        try:
+            lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+            recent_errors = [ln[-500:] for ln in lines if "ERROR" in ln][-20:]
+        except OSError:
+            logger.warning("Could not read log file for diagnostics")
+
+    return {
+        "server": "leanforge-mcp",
+        "version": VERSION,
+        "checked_at": datetime.now(UTC).isoformat(),
+        "tools": [t["name"] for t in MCP_TOOLS],
+        "lean_workspace": lean_ws,
+        "jobs": counts,
+        "live_tasks": len(runner._tasks),
+        "recent_errors": recent_errors,
     }

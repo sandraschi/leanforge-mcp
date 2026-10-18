@@ -27,9 +27,8 @@ from leanforge_mcp.core.config import load_config
 from leanforge_mcp.core.job_manager import JobManager
 from leanforge_mcp.core.lean_client import LeanClient
 from leanforge_mcp.core.runner import Runner
-
 from webapp.backend.event_bus import JobEventBus
-from webapp.backend.routes import docs, jobs, problems, skills, status, stream
+from webapp.backend.routes import docs, jobs, llm, logs, problems, skills, status, stream
 
 CONFIG_PATH = Path(__file__).parent.parent.parent / "config.toml"
 BACKEND_PORT = 10867
@@ -72,9 +71,7 @@ async def lifespan(app: FastAPI):
         logger.warning("Lean workspace not ready:\n%s", ws_msg)
 
     event_bus = JobEventBus()
-    runner = Runner(
-        config=config, job_manager=job_manager, lean=lean, event_bus=event_bus
-    )
+    runner = Runner(config=config, job_manager=job_manager, lean=lean, event_bus=event_bus)
 
     app.state.config = config
     app.state.runner = runner
@@ -117,6 +114,8 @@ app.include_router(problems.router)
 app.include_router(stream.router)
 app.include_router(skills.router)
 app.include_router(docs.router)
+app.include_router(llm.router)
+app.include_router(logs.router)
 
 
 @app.post("/api/shutdown")
