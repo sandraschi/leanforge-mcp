@@ -97,7 +97,16 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://127.0.0.1:10868",
+        "http://localhost:10868",
+        "http://127.0.0.1:10867",
+        "http://localhost:10867",
+        "tauri://localhost",
+        "http://tauri.localhost",
+        "https://tauri.localhost",
+    ],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|[a-z0-9-]+\.local|[a-z0-9-]+\.ts\.net)(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -108,6 +117,26 @@ app.include_router(problems.router)
 app.include_router(stream.router)
 app.include_router(skills.router)
 app.include_router(docs.router)
+
+
+@app.post("/api/shutdown")
+async def shutdown() -> dict:
+    """Orderly exit: respond 200 immediately, then terminate ~500 ms later.
+
+    The fleet launcher calls this before bouncing the service so live proof
+    jobs can checkpoint instead of being hard-killed.
+    """
+    import os
+    import threading
+    import time
+
+    def _exit() -> None:
+        time.sleep(0.5)
+        os._exit(0)  # intentional self-termination after responding
+
+    threading.Thread(target=_exit, daemon=True).start()
+    logger.info("leanforge web backend shutting down via POST /api/shutdown")
+    return {"status": "shutting_down"}
 
 
 def main():
