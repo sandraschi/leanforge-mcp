@@ -1,0 +1,49 @@
+# leanforge-mcp CI — Windows-only lightweight five-gate shape:
+# ruff (style) + pyright (types) + pytest (behavior) + tsc/biome (frontend).
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  backend:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: Sync dev + web extras
+        run: uv sync --extra dev --extra web
+      - name: Ruff check
+        run: uv run ruff check src/ webapp/backend/
+      - name: Ruff format check
+        run: uv run ruff format --check src/ webapp/backend/
+      - name: Pyright
+        run: uv run --with pyright pyright src/
+      - name: Pytest
+        run: uv run pytest tests/ -q
+
+  frontend:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install (frozen lockfile)
+        working-directory: webapp/frontend
+        run: bun install --frozen-lockfile
+      - name: Typecheck
+        working-directory: webapp/frontend
+        run: bun run check
+      - name: Biome CI
+        working-directory: webapp/frontend
+        run: bun run biome:ci
+      - name: Production build
+        working-directory: webapp/frontend
+        run: bun run build
