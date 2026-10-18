@@ -47,8 +47,15 @@ line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "S", "UP", "RUF"]
-ignore = ["S101", "B008", "B904", "S603", "E722", "RUF006", "S101", "B008", "B904", "S603", "E722", "RUF006", "S101", "B008", "B904", "S603", "E722", "RUF006", "S101", "B008", "B904", "S603", "E722", "RUF006", "RUF012", "B024", "S106", "S110", "S112", "B024", "S607", "S324", "E402", "B024", "S106", "S110", "S112", "B024", "E501"]
+select = ["E", "F", "W", "I", "B", "S", "UP", "RUF", "T20"]
+ignore = ["S101", "B008", "B904", "S603", "E722", "RUF006", "RUF012", "B024", "S106", "S607", "S324", "E402", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/leanforge_mcp/server.py" = ["T20"]
+"src/leanforge_mcp/__main__.py" = ["T20"]
+"webapp/backend/main.py" = ["T20"]
+"scripts/**" = ["T20", "S603", "S607"]
+"tests/**" = ["T20", "S101"]
 
 [tool.ruff.format]
 quote-style = "double"

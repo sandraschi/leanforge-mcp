@@ -60,8 +60,7 @@ e2e-install:
 
 # Run Playwright E2E smoke tests (start backend first: just serve)
 e2e:
-    cd {{REPO}}\webapp/frontend
-    npx playwright test
+    cd {{REPO}}\webapp/frontend; npx playwright test
 
 
 # Bootstrap: install dev deps + pre-commit hook

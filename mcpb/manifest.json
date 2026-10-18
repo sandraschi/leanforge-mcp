@@ -9,9 +9,9 @@
     "entry_point": "src/leanforge_mcp/__main__.py",
     "mcp_config": {
       "command": "uv",
-      "args": ["run","--directory","${PWD}","python","-m","leanforge_mcp"],
+      "args": ["run","--directory","${__dirname}","python","-m","leanforge_mcp"],
       "env": {
-        "PYTHONPATH": "${PWD}/src",
+        "PYTHONPATH": "${__dirname}/src",
         "PYTHONUNBUFFERED": "1"
       }
     }
