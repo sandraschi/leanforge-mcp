@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from "react";
-import { MessageCircle, Send, Eraser, Download } from "lucide-react";
+import { Download, Eraser, MessageCircle, Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { postLlmChat, streamLlmChat } from "../api";
+import { useLlmStore } from "../store/llm";
 
 type Msg = { role: "user" | "assistant"; content: string; ts?: string };
 
@@ -24,6 +26,7 @@ export default function ChatPage() {
   const [skillContent, setSkillContent] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { selectedTier, setSelectedTier } = useLlmStore();
 
   useEffect(() => {
     try {
@@ -32,11 +35,16 @@ export default function ChatPage() {
       const p = localStorage.getItem(PERSONALITY_KEY);
       if (p) setPersonality(p);
     } catch {}
-    fetch("/api/skills").then((r) => r.json()).then((d) => {
-      if (d.skills?.includes("lean_expert")) {
-        fetch("/api/skills/lean_expert").then((r) => r.text()).then(setSkillContent);
-      }
-    }).catch(() => {});
+    fetch("/api/skills")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.skills?.includes("lean_expert")) {
+          fetch("/api/skills/lean_expert")
+            .then((r) => r.text())
+            .then(setSkillContent);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -51,41 +59,58 @@ export default function ChatPage() {
     let base = skillContent || "You are a Lean 4 assistant.";
     if (personality === "custom" && customPrompt) return customPrompt;
     const role = PERSONALITIES[personality];
-    if (role) base += "\n\n---\n\n## Role\n" + role;
+    if (role) base += `\n\n---\n\n## Role\n${role}`;
     return base;
   };
 
   const send = async () => {
     if (!input.trim() || loading) return;
-    const userMsg: Msg = { role: "user", content: input.trim(), ts: new Date().toISOString() };
-    setMessages((prev) => [...prev, userMsg]);
+    const userMsg: Msg = {
+      role: "user",
+      content: input.trim(),
+      ts: new Date().toISOString(),
+    };
+    const history = [...messages, userMsg];
+    setMessages(history);
     setInput("");
     setLoading(true);
 
+    // All completions go through the backend proxy (keys never leave the server).
+    const body = {
+      messages: history.map((m) => ({ role: m.role, content: m.content })),
+      system: buildSystemPrompt(),
+      tier: selectedTier,
+    };
+    const assistantMsg: Msg = {
+      role: "assistant",
+      content: "",
+      ts: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, assistantMsg]);
+
     try {
-      const r = await fetch("http://127.0.0.1:11434/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "deepseek-prover-v2:7b",
-          messages: [
-            { role: "system", content: buildSystemPrompt() },
-            ...messages.map((m) => ({ role: m.role, content: m.content })),
-            { role: "user", content: userMsg.content },
-          ],
-          stream: false,
-        }),
+      await streamLlmChat(body, (token) => {
+        assistantMsg.content += token;
+        setMessages((prev) => [...prev.slice(0, -1), { ...assistantMsg }]);
       });
-      const data = await r.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.message?.content || "(no response)", ts: new Date().toISOString() },
-      ]);
+      if (!assistantMsg.content) throw new Error("empty stream");
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Error: backend unreachable. Is Ollama running on port 11434?", ts: new Date().toISOString() },
-      ]);
+      try {
+        const data = await postLlmChat(body);
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { ...assistantMsg, content: data.reply || "(no response)" },
+        ]);
+      } catch {
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          {
+            ...assistantMsg,
+            content:
+              "Error: chat backend unreachable. Is the webapp backend running, and is Ollama (tier 1) or an API key (tier 2/3) configured? See Settings.",
+          },
+        ]);
+      }
     }
     setLoading(false);
   };
@@ -96,7 +121,9 @@ export default function ChatPage() {
   };
 
   const exportChat = () => {
-    const text = messages.map((m) => `[${m.ts || "?"}] ${m.role}: ${m.content}`).join("\n\n");
+    const text = messages
+      .map((m) => `[${m.ts || "?"}] ${m.role}: ${m.content}`)
+      .join("\n\n");
     const blob = new Blob([text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -109,14 +136,20 @@ export default function ChatPage() {
   return (
     <div data-testid="chat-page" className="flex flex-col h-full bg-zinc-950">
       {/* Controls bar */}
-      <div data-testid="chat-controls" className="flex items-center gap-3 px-4 py-2 border-b border-zinc-800 bg-zinc-900">
+      <div
+        data-testid="chat-controls"
+        className="flex items-center gap-3 px-4 py-2 border-b border-zinc-800 bg-zinc-900"
+      >
         <MessageCircle size={18} className="text-amber-500" />
         <span className="text-sm text-zinc-400">skill:lean-expert</span>
         <select
           data-testid="personality-select"
           value={personality}
-          onChange={(e) => { setPersonality(e.target.value); localStorage.setItem(PERSONALITY_KEY, e.target.value); }}
-          className="bg-zinc-800 text-zinc-100 border border-zinc-600 rounded px-2 py-1 text-xs"
+          onChange={(e) => {
+            setPersonality(e.target.value);
+            localStorage.setItem(PERSONALITY_KEY, e.target.value);
+          }}
+          className="bg-zinc-800 text-zinc-100 border border-zinc-600 rounded px-2 py-1 text-sm"
         >
           <option value="lean-expert">Lean Expert</option>
           <option value="theorem-coach">Theorem Coach</option>
@@ -124,34 +157,73 @@ export default function ChatPage() {
           <option value="custom">Custom</option>
         </select>
         <div className="flex-1" />
-        <button data-testid="chat-export" onClick={exportChat} disabled={messages.length === 0}
-          className="p-1.5 text-zinc-500 hover:text-zinc-100 disabled:opacity-30">
+        <select
+          data-testid="chat-tier"
+          value={selectedTier}
+          onChange={(e) => setSelectedTier(Number(e.target.value))}
+          className="bg-zinc-800 text-zinc-100 border border-zinc-600 rounded px-2 py-1 text-sm"
+        >
+          <option value={1}>Tier 1 (local)</option>
+          <option value={2}>Tier 2 (DeepSeek)</option>
+          <option value={3}>Tier 3 (Anthropic)</option>
+        </select>
+        <button
+          type="button"
+          data-testid="chat-export"
+          onClick={exportChat}
+          disabled={messages.length === 0}
+          className="p-1.5 text-zinc-500 hover:text-zinc-100 disabled:opacity-30"
+        >
           <Download size={16} />
         </button>
-        <button data-testid="chat-clear" onClick={clearChat} disabled={messages.length === 0}
-          className="p-1.5 text-zinc-500 hover:text-zinc-100 disabled:opacity-30">
+        <button
+          type="button"
+          data-testid="chat-clear"
+          onClick={clearChat}
+          disabled={messages.length === 0}
+          className="p-1.5 text-zinc-500 hover:text-zinc-100 disabled:opacity-30"
+        >
           <Eraser size={16} />
         </button>
       </div>
 
       {/* Custom prompt editor */}
       {personality === "custom" && (
-        <textarea value={customPrompt} onChange={(e) => setCustomPrompt(e.target.value)}
+        <textarea
+          value={customPrompt}
+          onChange={(e) => setCustomPrompt(e.target.value)}
           placeholder="Enter custom system prompt..."
-          className="mx-4 mt-2 p-2 bg-zinc-900 border border-zinc-700 rounded text-xs text-zinc-300 h-20 resize-none"
+          className="mx-4 mt-2 p-2 bg-zinc-900 border border-zinc-700 rounded text-sm text-zinc-300 h-20 resize-none"
         />
       )}
 
       {/* Messages */}
-      <div data-testid="chat-messages" className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div
+        data-testid="chat-messages"
+        className="flex-1 overflow-y-auto p-4 space-y-3"
+      >
         {messages.length === 0 && (
           <div className="text-center text-zinc-600 mt-12">
             <MessageCircle size={32} className="mx-auto mb-2 opacity-40" />
-            <p className="text-sm">Ask me about Lean 4 tactics, syntax, or theorems.</p>
-            <div data-testid="example-prompts" className="flex flex-wrap justify-center gap-2 mt-4">
-              {["What is the current Lean version?", "How do I use omega?", "Find lemma: map composition", "Help with calc block"].map((p) => (
-                <button key={p} onClick={() => setInput(p)}
-                  className="px-3 py-1.5 text-xs bg-zinc-800 border border-zinc-700 rounded-full text-zinc-400 hover:bg-zinc-700">
+            <p className="text-sm">
+              Ask me about Lean 4 tactics, syntax, or theorems.
+            </p>
+            <div
+              data-testid="example-prompts"
+              className="flex flex-wrap justify-center gap-2 mt-4"
+            >
+              {[
+                "What is the current Lean version?",
+                "How do I use omega?",
+                "Find lemma: map composition",
+                "Help with calc block",
+              ].map((p) => (
+                <button
+                  type="button"
+                  key={p}
+                  onClick={() => setInput(p)}
+                  className="px-3 py-1.5 text-sm bg-zinc-800 border border-zinc-700 rounded-full text-zinc-300 hover:bg-zinc-700"
+                >
                   {p}
                 </button>
               ))}
@@ -159,17 +231,26 @@ export default function ChatPage() {
           </div>
         )}
         {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[80%] rounded-xl px-4 py-2 text-sm ${
-              m.role === "user" ? "bg-blue-600 text-white" : "bg-zinc-800 text-zinc-200"
-            }`}>
+          <div
+            key={i}
+            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+          >
+            <div
+              className={`max-w-[80%] rounded-xl px-4 py-2 text-sm ${
+                m.role === "user"
+                  ? "bg-blue-600 text-white"
+                  : "bg-zinc-800 text-zinc-200"
+              }`}
+            >
               {m.content}
             </div>
           </div>
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-zinc-800 rounded-xl px-4 py-2 text-sm text-zinc-400 animate-pulse">Thinking...</div>
+            <div className="bg-zinc-800 rounded-xl px-4 py-2 text-sm text-zinc-400 animate-pulse">
+              Thinking...
+            </div>
           </div>
         )}
         <div ref={bottomRef} />
@@ -182,12 +263,22 @@ export default function ChatPage() {
             data-testid="chat-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
             placeholder="Ask about Lean 4..."
             className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500"
           />
-          <button data-testid="chat-send" onClick={send} disabled={loading || !input.trim()}
-            className="bg-amber-600 hover:bg-amber-500 disabled:bg-zinc-700 rounded-xl px-4 py-2 text-white">
+          <button
+            type="button"
+            data-testid="chat-send"
+            onClick={send}
+            disabled={loading || !input.trim()}
+            className="bg-amber-600 hover:bg-amber-500 disabled:bg-zinc-700 rounded-xl px-4 py-2 text-white"
+          >
             <Send size={16} />
           </button>
         </div>

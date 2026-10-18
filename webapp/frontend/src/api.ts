@@ -123,7 +123,10 @@ export async function fetchDoc(name: string): Promise<string> {
 // Jobs
 // ---------------------------------------------------------------------------
 
-export async function fetchJobs(status?: string, limit = 50): Promise<{ jobs: Job[] }> {
+export async function fetchJobs(
+  status?: string,
+  limit = 50,
+): Promise<{ jobs: Job[] }> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (status) params.set("status", status);
   return apiFetch<{ jobs: Job[] }>(`/jobs?${params}`);
@@ -221,7 +224,10 @@ export async function createProblem(body: {
   });
 }
 
-export async function updateProblem(id: string, body: Partial<Problem>): Promise<void> {
+export async function updateProblem(
+  id: string,
+  body: Partial<Problem>,
+): Promise<void> {
   await apiFetch(`/problems/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -231,4 +237,146 @@ export async function updateProblem(id: string, body: Partial<Problem>): Promise
 
 export async function deleteProblem(id: string): Promise<void> {
   await apiFetch(`/problems/${id}`, { method: "DELETE" });
+}
+
+// ---------------------------------------------------------------------------
+// Capabilities / diagnostics / logs
+// ---------------------------------------------------------------------------
+
+export interface McpToolInfo {
+  name: string;
+  description: string;
+}
+
+export async function fetchCapabilities(): Promise<{
+  server: string;
+  version: string;
+  transport: string;
+  tools: McpToolInfo[];
+}> {
+  return apiFetch("/capabilities");
+}
+
+export async function fetchDiagnostics(): Promise<{
+  server: string;
+  version: string;
+  checked_at: string;
+  tools: string[];
+  lean_workspace: { ok: boolean | null; message: string };
+  jobs: Record<string, number>;
+  live_tasks: number;
+  recent_errors: string[];
+}> {
+  return apiFetch("/v1/diagnostics");
+}
+
+export async function fetchLogs(
+  limit = 200,
+  level?: string,
+): Promise<{
+  path: string;
+  exists: boolean;
+  count: number;
+  entries: string[];
+}> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (level) params.set("level", level);
+  return apiFetch(`/logs?${params}`);
+}
+
+// ---------------------------------------------------------------------------
+// LLM registry + chat proxy (the ONLY path the Chat page may use)
+// ---------------------------------------------------------------------------
+
+export interface LlmProvider {
+  id: string;
+  label: string;
+  tier: number;
+  model: string;
+  base_url?: string;
+  free: boolean;
+  detected?: boolean;
+  configured?: boolean;
+}
+
+export async function fetchLlmProviders(): Promise<{
+  providers: LlmProvider[];
+}> {
+  return apiFetch("/llm/providers");
+}
+
+export async function fetchLlmDiscover(): Promise<{
+  ollama: boolean;
+  lm_studio: boolean;
+}> {
+  return apiFetch("/llm/discover");
+}
+
+export async function fetchLlmModels(): Promise<{
+  models: string[];
+  live: boolean;
+}> {
+  return apiFetch("/llm/models");
+}
+
+export async function fetchLlmOnboarding(): Promise<{
+  facts: string[];
+  recommended_path: string;
+  ollama_detected: boolean;
+}> {
+  return apiFetch("/llm/onboarding");
+}
+
+export interface ChatMsg {
+  role: string;
+  content: string;
+}
+
+export async function postLlmChat(body: {
+  messages: ChatMsg[];
+  system?: string;
+  tier?: number;
+}): Promise<{ reply: string; tier: number; model: string }> {
+  return apiFetch("/llm/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function streamLlmChat(
+  body: { messages: ChatMsg[]; system?: string; tier?: number },
+  onToken: (token: string) => void,
+): Promise<void> {
+  const res = await fetch(`${BASE}/llm/chat/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok || !res.body)
+    throw new Error(`Chat stream returned ${res.status}`);
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const parts = buf.split("\n\n");
+    buf = parts.pop() ?? "";
+    for (const part of parts) {
+      const line = part.trim();
+      if (!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if (payload === "[DONE]") return;
+      try {
+        const data = JSON.parse(payload);
+        if (data.error) throw new Error(data.error);
+        const token = data.choices?.[0]?.delta?.content;
+        if (token) onToken(token);
+      } catch (e) {
+        if (e instanceof Error && e.message !== payload) throw e;
+      }
+    }
+  }
 }

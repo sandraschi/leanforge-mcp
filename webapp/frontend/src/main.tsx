@@ -4,7 +4,9 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 
-createRoot(document.getElementById("root")!).render(
+const rootEl = document.getElementById("root");
+if (!rootEl) throw new Error("leanforge webapp: #root element missing");
+createRoot(rootEl).render(
   <StrictMode>
     <BrowserRouter>
       <App />
