@@ -1,0 +1,73 @@
+"""MCP tool: verify_proof -- re-check a proven file with verified external kernels."""
+
+from __future__ import annotations
+
+from fastmcp import Context, FastMCP
+
+from leanforge_mcp.core.runner import get_runner
+
+router = FastMCP("verify")
+
+
+@router.tool(
+    description=(
+        "Re-verify Lean 4 source with independent verified kernels (con-leche, con-ron). "
+        "Compiles first: unproven input is rejected without touching the kernels. "
+        "Proven input is exported via leanexport and replayed through each kernel; "
+        "all must accept. Needs a workspace on Lean >= 4.35.0, otherwise returns "
+        "supported=false with the upgrade path. Slow (minutes for Mathlib proofs) -- "
+        "use for results that matter, not per-turn checking."
+    ),
+)
+async def verify_proof(
+    lean_source: str,
+    ctx: Context,
+) -> dict:
+    runner = get_runner(ctx)
+    if runner.lean.setup_in_progress:
+        return {
+            "proven": False,
+            "verified": False,
+            "status": "pending",
+            "message": f"Leanforge setup running: {runner.lean.setup_status}. Try again shortly.",
+        }
+    if runner.lean.setup_error:
+        return {
+            "proven": False,
+            "verified": False,
+            "status": "error",
+            "message": f"Leanforge setup failed: {runner.lean.setup_error}. Fix installation files.",
+        }
+    compiled = await runner.lean.compile(lean_source)
+    if not compiled.proven:
+        return {
+            "proven": False,
+            "verified": False,
+            "has_sorry": compiled.has_sorry,
+            "errors": compiled.errors,
+            "warnings": compiled.warnings,
+            "message": "Not proven by the official kernel; fix compile errors first.",
+        }
+    cfg = runner.config.lean
+    result = await runner.lean.verify_external(
+        lean_source,
+        kernels=tuple(cfg.external_checkers),
+        verify_lib=cfg.verify_lib,
+        timeout=cfg.verify_timeout,
+    )
+    return {
+        "proven": True,
+        "verified": result.all_accepted,
+        "supported": result.supported,
+        "toolchain": result.toolchain_version,
+        "kernels": [
+            {
+                "kernel": v.kernel,
+                "accepted": v.accepted,
+                "declarations": v.declarations,
+                "detail": v.detail,
+            }
+            for v in result.results
+        ],
+        "message": result.message,
+    }

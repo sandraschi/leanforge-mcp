@@ -19,7 +19,7 @@ from leanforge_mcp.core.config import load_config
 from leanforge_mcp.core.job_manager import JobManager
 from leanforge_mcp.core.lean_client import LeanClient
 from leanforge_mcp.core.runner import Runner, set_runner_fallback
-from leanforge_mcp.tools import control, mathlib, status, submit
+from leanforge_mcp.tools import control, mathlib, status, submit, verify
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +91,7 @@ mcp.mount(submit.router)
 mcp.mount(status.router)
 mcp.mount(control.router)
 mcp.mount(mathlib.router)
+mcp.mount(verify.router)
 
 # -- Skills ----------------------------------------------------------------
 

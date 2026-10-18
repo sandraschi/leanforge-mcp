@@ -21,6 +21,14 @@ class LeanConfig:
     # Cap concurrent Lean processes -- each loads Mathlib, uses GBs of RAM.
     max_concurrent_compiles: int = 4
     retain_workspace: bool = False
+    # External kernel re-verification (verify_proof tool). Per-stage timeout in
+    # seconds: build, export, and each checker get this budget separately, since
+    # a Mathlib proof's export covers the whole dependency closure (minutes).
+    verify_timeout: int = 600
+    # Checker binaries to run, resolved from the toolchain's bin/ dir.
+    external_checkers: list[str] = field(default_factory=lambda: ["con-leche", "con-ron"])
+    # Lake lib the temp verify module is built under (<verify_lib>.LfVerify<hex>).
+    verify_lib: str = "LeanforgeWorkspace"
 
 
 @dataclass
