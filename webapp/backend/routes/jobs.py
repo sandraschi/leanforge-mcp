@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -90,9 +89,7 @@ async def get_job(request: Request, job_id: str):
 async def submit_theorem(request: Request, body: SubmitTheoremRequest):
     runner, event_bus = _get_services(request)
 
-    lean_stub_tpl = (
-        "import Mathlib\n\ntheorem user_theorem : {statement} := by\n  sorry\n"
-    )
+    lean_stub_tpl = "import Mathlib\n\ntheorem user_theorem : {statement} := by\n  sorry\n"
     lean_source = body.lean_stub or lean_stub_tpl.format(statement=body.statement)
     if body.hints:
         lean_source = f"-- HINTS: {body.hints}\n" + lean_source

@@ -20,6 +20,7 @@ async def job_stream(request: Request, job_id: str):
     job = await runner.jobs.get_job(job_id)
     if job is None:
         from fastapi.responses import JSONResponse
+
         return JSONResponse(status_code=404, content={"error": "Job not found."})
 
     headers = {
@@ -29,8 +30,10 @@ async def job_stream(request: Request, job_id: str):
     }
 
     if job.status in ("complete", "failed", "cancelled"):
+
         async def early_generator():
             yield f"data: {json.dumps({'type': 'done', 'status': job.status})}\n\n"
+
         return StreamingResponse(early_generator(), media_type="text/event-stream", headers=headers)
 
     queue = event_bus.subscribe(job_id)
@@ -48,7 +51,7 @@ async def job_stream(request: Request, job_id: str):
                     ):
                         yield f"data: {json.dumps({'type': 'done', 'status': event['status']})}\n\n"
                         break
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
         except asyncio.CancelledError:
             pass

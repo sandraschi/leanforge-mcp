@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import aiosqlite
 from fastapi import APIRouter, HTTPException, Request
@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS problems (
 """
 
 
-
 class ProblemCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     statement: str = Field(min_length=1)
@@ -51,7 +50,7 @@ class ProblemUpdate(BaseModel):
 
 
 def _now():
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 @router.get("")
@@ -82,9 +81,7 @@ async def get_problem(request: Request, problem_id: str):
     db_path = request.app.state.config.database.path
     async with aiosqlite.connect(db_path) as db:
         db.row_factory = aiosqlite.Row
-        async with db.execute(
-            "SELECT * FROM problems WHERE id=?", (problem_id,)
-        ) as cur:
+        async with db.execute("SELECT * FROM problems WHERE id=?", (problem_id,)) as cur:
             row = await cur.fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="Problem not found.")
@@ -101,8 +98,18 @@ async def create_problem(request: Request, body: ProblemCreate):
             """INSERT INTO problems
                (id, title, statement, lean_source, source, difficulty, tags, notes, created_at, updated_at)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (pid, body.title, body.statement, body.lean_source, body.source,
-             body.difficulty, body.tags, body.notes, now, now),
+            (
+                pid,
+                body.title,
+                body.statement,
+                body.lean_source,
+                body.source,
+                body.difficulty,
+                body.tags,
+                body.notes,
+                now,
+                now,
+            ),
         )
         await db.commit()
     return {"id": pid, "message": "Problem created."}
@@ -126,7 +133,8 @@ async def update_problem(request: Request, problem_id: str, body: ProblemUpdate)
     db_path = request.app.state.config.database.path
     async with aiosqlite.connect(db_path) as db:
         await db.execute(
-            f"UPDATE problems SET {', '.join(fields)} WHERE id=?", values
+            f"UPDATE problems SET {', '.join(fields)} WHERE id=?",  # noqa: S608 -- SET columns come from a hardcoded allowlist tuple; all values parameterized
+            values,
         )
         await db.commit()
     return {"message": "Problem updated."}

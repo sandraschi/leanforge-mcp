@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ class JobEventBus:
             self._queues.pop(job_id, None)
 
     def publish(self, job_id: str, event: dict):
-        event["_ts"] = datetime.now(timezone.utc).isoformat()
+        event["_ts"] = datetime.now(UTC).isoformat()
         queues = self._queues.get(job_id, [])
         for q in queues:
             try:

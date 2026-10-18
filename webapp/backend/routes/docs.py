@@ -14,15 +14,15 @@ DOCS_DIR = REPO_ROOT / "docs"
 
 # name → path relative to repo root. Explicit whitelist -- no traversal possible.
 ALLOWED_DOCS: dict[str, Path] = {
-    "INSTALL":               REPO_ROOT / "INSTALL.md",
-    "LEAN":                  DOCS_DIR / "LEAN.md",
-    "LEAN_PRIMER":           DOCS_DIR / "LEAN_PRIMER.md",
-    "CONFIGURATION":         DOCS_DIR / "CONFIGURATION.md",
-    "TOOLS":                 DOCS_DIR / "TOOLS.md",
-    "DEVELOPMENT":           DOCS_DIR / "DEVELOPMENT.md",
-    "TROUBLESHOOTING":       DOCS_DIR / "TROUBLESHOOTING.md",
-    "ARCHITECTURE":          DOCS_DIR / "ARCHITECTURE.md",
-    "BENCHMARK_RESULTS":     DOCS_DIR / "BENCHMARK_RESULTS.md",
+    "INSTALL": REPO_ROOT / "INSTALL.md",
+    "LEAN": DOCS_DIR / "LEAN.md",
+    "LEAN_PRIMER": DOCS_DIR / "LEAN_PRIMER.md",
+    "CONFIGURATION": DOCS_DIR / "CONFIGURATION.md",
+    "TOOLS": DOCS_DIR / "TOOLS.md",
+    "DEVELOPMENT": DOCS_DIR / "DEVELOPMENT.md",
+    "TROUBLESHOOTING": DOCS_DIR / "TROUBLESHOOTING.md",
+    "ARCHITECTURE": DOCS_DIR / "ARCHITECTURE.md",
+    "BENCHMARK_RESULTS": DOCS_DIR / "BENCHMARK_RESULTS.md",
     "ASSESSMENT_2026-06-24": DOCS_DIR / "ASSESSMENT_2026-06-24.md",
 }
 
