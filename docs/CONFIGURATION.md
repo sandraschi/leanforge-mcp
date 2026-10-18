@@ -15,6 +15,9 @@ environment variables (via Claude Desktop's `env` block or your shell).
 | `compile_timeout` | `120` | Seconds before a Lean compile is killed. Mathlib files are slow; 120s is conservative. |
 | `max_concurrent_compiles` | `4` | Semaphore cap on parallel `lake env lean` processes. Each loads Mathlib (~GB RAM). |
 | `retain_workspace` | `false` | Keep temp `.lean` files after job completes. Enable for debugging compiler output. |
+| `verify_timeout` | `600` | Per-stage seconds for `verify_proof` (build, export, each checker get this budget). |
+| `external_checkers` | `["con-leche", "con-ron"]` | Checker binaries run by `verify_proof`, resolved from the toolchain's `bin/` dir. |
+| `verify_lib` | `"LeanforgeWorkspace"` | Lake lib the temp verify module is built under. |
 
 ---
 

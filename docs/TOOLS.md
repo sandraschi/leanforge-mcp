@@ -176,6 +176,41 @@ before submitting it for proof search.
 
 `proven` is true only when `success=true` AND `has_sorry=false`.
 
+---
+
+## verify_proof
+
+Re-verify Lean 4 source with independent verified kernels (con-leche, con-ron).
+Compiles first with the official kernel; unproven input is rejected before any
+kernel runs. Proven input is exported via `leanexport` and replayed through each
+kernel -- `verified` is true only if **all** of them accept. Needs a workspace on
+Lean >= 4.35.0 (ours is still 4.31.0, so it currently returns `supported: false`
+with the upgrade path). Slow on Mathlib proofs (minutes) -- use for results that
+matter, not per-turn checking. Full story: [VERIFIED_KERNELS.md](VERIFIED_KERNELS.md).
+
+**Parameters:** `lean_source: string`
+
+**Returns:**
+```json
+{
+  "proven": true,
+  "verified": true,
+  "supported": true,
+  "toolchain": "4.35.0",
+  "kernels": [
+    {"kernel": "con-leche", "accepted": true, "declarations": 57921},
+    {"kernel": "con-ron", "accepted": true, "declarations": 57921}
+  ]
+}
+```
+
+**Example:**
+```
+verify_proof("import Mathlib\nexample : 1 = 1 := rfl\n")
+→ {"proven": true, "verified": true, ...}   # once workspace is on >= 4.35.0
+→ {"proven": true, "verified": false, "supported": false, ...}   # today (4.31.0)
+```
+
 **Example:**
 ```
 validate_lean("import Mathlib\nexample : 1 = 1 := rfl\n")

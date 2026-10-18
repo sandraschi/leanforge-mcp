@@ -27,6 +27,14 @@ max_concurrent_compiles = 4
 # Retain temp Lean files after job completes (debugging)
 retain_workspace = false
 
+# External kernel re-verification for the verify_proof tool (needs a
+# workspace on Lean >= 4.35.0; see docs/VERIFIED_KERNELS.md). The proof is
+# exported via leanexport and re-checked with independent verified kernels:
+# con-leche (Lean, proven consistent) and con-ron (Rust port, Aeneas proof).
+# verify_timeout = 600
+# external_checkers = ["con-leche", "con-ron"]
+# verify_lib = "LeanforgeWorkspace"
+
 [database]
 # Default: <repo>\data\jobs.db
 # path = "C:\\path\\to\\jobs.db"

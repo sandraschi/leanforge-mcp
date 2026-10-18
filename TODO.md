@@ -137,6 +137,14 @@ lands.
   proof sketch population instead of independent subagents.
 - **`lean4checker` re-verification** for proofs of genuinely open
   problems, using only kernel axioms for stronger assurance.
+  -> SUPERSEDED 2026-10-18: landed as the `verify_proof` tool
+  (`src/leanforge_mcp/tools/verify.py` + `LeanClient.verify_external`),
+  upgraded to the Oct 2026 reality -- con-leche + con-ron via `leanexport`,
+  not lean4checker. Code is tested (15 tests) but DORMANT: the workspace is
+  still pinned to Lean 4.31.0 and verification needs >= 4.35.0, so the tool
+  returns `supported: false` until the workspace upgrade runs
+  (lean-toolchain + Mathlib rev bump, `lake update`, cache get, build --
+  multi-GB, plan it). See docs/VERIFIED_KERNELS.md.
 - **erdosproblems.com scraper + formalizer** -- fetch open problems, use
   an LLM to write the correct Lean 4 theorem STATEMENT (the hard part),
   then submit for proof search.
