@@ -4,44 +4,48 @@ Agent protocols for Cursor, Windsurf, Claude Code, and any agentic IDE working i
 
 ## Stack
 
-- **Language:** Python 3.11+, FastMCP >= 3.2.0
-- **Package manager:** uv
+- **Language:** Python 3.12+, FastMCP >= 3.4.4
+- **Package manager:** uv (`uv sync --extra dev --extra web` -- bare `uv sync` prunes dev+web deps from the venv)
 - **Lean:** Lean 4 via elan, Mathlib4
 - **Config:** TOML via `tomllib` (stdlib, Python 3.11+)
 - **Persistence:** SQLite via `aiosqlite`
-- **Linting:** Ruff (formatter + linter)
+- **Linting:** Ruff (formatter + linter, covers `src/` + `webapp/backend/`)
 - **Tests:** pytest + pytest-asyncio
+- **Webapp:** React + Vite + Tailwind + Zustand + FastAPI backend (ports 10867/10868); frontend lint via Biome (`bun run biome:ci`), types via `tsc --noEmit`
 
 ## Repo layout
 
 ```
 leanforge-mcp\
 ├── src\
-│   ├── core\
-│   │   ├── agent.py        # Subagent loop: LLM propose → Lean compile → repeat
-│   │   ├── config.py       # TOML config loader + dataclasses
-│   │   ├── job_manager.py  # SQLite job queue, status tracking
-│   │   ├── lean_client.py  # Lean 4 subprocess wrapper
-│   │   └── llm_client.py   # Multi-tier LLM client (Ollama / OpenAI-compat / Anthropic)
-│   ├── tools\
-│   │   ├── submit.py       # submit_theorem, submit_lean_file
-│   │   ├── status.py       # get_proof_status, list_attempts, list_jobs, validate_lean
-│   │   ├── control.py      # cancel_job
-│   │   └── mathlib.py      # get_mathlib_search
-│   ├── lean\
-│   │   └── templates\      # .lean file templates for common theorem shapes
-│   └── server.py           # FastMCP server entry point + main()
-├── tests\
-│   └── test_pipeline.py    # End-to-end pipeline tests
-├── docs\
-│   ├── ARCHITECTURE.md
-│   ├── LEAN_PRIMER.md
-│   └── BENCHMARK_RESULTS.md
-├── data\                   # SQLite DB lives here (gitignored)
-├── logs\                   # Log files (gitignored)
-├── workspace\              # Temp Lean files per job (gitignored)
+│   └── leanforge_mcp\
+│       ├── core\
+│       │   ├── agent.py        # Subagent loop: LLM propose → Lean compile → repeat
+│       │   ├── config.py       # TOML config loader + dataclasses
+│       │   ├── job_manager.py  # SQLite job queue, status tracking
+│       │   ├── lean_client.py  # Lean 4 subprocess wrapper
+│       │   └── llm_client.py   # Multi-tier LLM client (Ollama / OpenAI-compat / Anthropic)
+│       ├── tools\
+│       │   ├── submit.py       # submit_theorem, submit_lean_file
+│       │   ├── status.py       # get_proof_status, list_attempts, list_jobs, validate_lean
+│       │   ├── control.py      # cancel_job, leanforge_shutdown
+│       │   ├── verify.py       # verify_proof (independent kernels)
+│       │   └── mathlib.py      # get_mathlib_search
+│       ├── lean\
+│       │   └── templates\      # .lean file templates for common theorem shapes
+│       ├── skills\
+│       │   └── lean_expert\    # Lean 4 Expert skill (skill:// + /api/skills)
+│       └── server.py           # FastMCP server entry point + main()
+├── webapp\
+│   ├── backend\                # FastAPI: jobs/problems/stream/skills/docs/llm/logs/status
+│   └── frontend\src\           # React: Dashboard/Inbox/Tools/Skills/Chat/Settings/Logs/Help
+├── tests\                      # pytest suite (79 tests)
+├── docs\                       # ARCHITECTURE, TOOLS, CONFIGURATION, ONBOARDING, ...
+├── data\                       # SQLite DB lives here (gitignored)
+├── logs\                       # Log files (gitignored)
+├── workspace\                  # Temp Lean files per job (gitignored)
 ├── config.example.toml
-├── config.toml             # Local config (gitignored)
+├── config.toml                 # Local config (gitignored)
 ├── pyproject.toml
 ├── start.ps1
 ├── glama.json
@@ -50,6 +54,13 @@ leanforge-mcp\
 ├── CLAUDE.md
 └── README.md
 ```
+
+## MCP tools
+
+All tools return `success` + `message` on every path (unknown ids keep a legacy
+`error` key too). Queries are `readOnlyHint`, submissions `openWorldHint`,
+`cancel_job` / `leanforge_shutdown` are `destructiveHint`. `list_jobs` and
+`get_proof_status` expose Prefab `app=True` cards.
 
 ## Critical rules
 

@@ -81,6 +81,16 @@ Cancel a running proof search job.
 Input: job_id.
 Returns: confirmation or current status if no live task found.
 
+### verify_proof
+Re-verify a proven file with independent verified kernels (con-leche, con-ron).
+Input: lean_source. Returns proven/verified/supported/toolchain/kernels.
+Needs a workspace on Lean >= 4.35.0, otherwise supported=false with the
+upgrade path. Slow (minutes) -- use for results that matter, not per-turn.
+
+### leanforge_shutdown
+Gracefully shut down the server (cancels live jobs, exits ~500 ms after
+responding). Use before upgrades or restarts.
+
 ### validate_lean
 Run the Lean 4 compiler on arbitrary source. No job tracking, no LLM.
 Input: lean_source (Lean 4 code).
@@ -96,6 +106,18 @@ Returns: list of {name, statement, module} for matching Mathlib theorems.
 Use for: finding the right lemma name when the agent is stuck; pass result as
 hints to submit_theorem.
 Data source: LeanSearch API at leansearch.net.
+
+## Web backend (port 10867, frontend on 10868)
+
+FastAPI backend sharing the same SQLite DB and core modules. Key routes for
+agents and the dashboard: /api/health, /api/status, /api/capabilities,
+/api/v1/diagnostics, /api/logs, /api/jobs (GET/POST + /{id}/cancel +
+/{id}/stream SSE), /api/problems (CRUD), /api/skills, /api/docs,
+/api/llm/providers|discover|models|onboarding, POST /api/llm/chat and
+POST /api/llm/chat/stream (SSE -- the ONLY path the Chat UI uses; keys never
+leave the server), POST /api/shutdown (orderly exit before service bounce).
+Frontend calls same-origin /api/... via the Vite proxy; absolute backend URLs
+only behind the Tauri gate. CORS: explicit localhost/Tauri origins + LAN regex.
 
 ## Typical agent workflow
 

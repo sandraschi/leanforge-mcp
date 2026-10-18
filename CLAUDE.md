@@ -18,7 +18,7 @@ First subagent to produce a sorry-free compile wins.
 
 ## When working on agent.py
 
-Core loop in `src\core\agent.py`. The LLM's job each turn:
+Core loop in `src\leanforge_mcp\core\agent.py`. The LLM's job each turn:
 1. Read current `.lean` file
 2. Read last compiler error (if any)
 3. Propose a search-replace edit filling `sorry`
@@ -50,16 +50,22 @@ Check `proc.returncode == 0` AND no `sorry` in source for a proven result.
 
 ```
 submit_theorem(statement, hints?, tier=1, parallel_agents=4, max_turns=100)
-  → {"job_id": "uuid", "status": "queued"}
+  → {"success": true, "job_id": "uuid", "status": "queued"}
 
 get_proof_status(job_id)
-  → {"status": "running|complete|failed", "proof": "...", "turns_used": int}
+  → {"success": true, "status": "running|complete|failed", "proof": "...", "turns_used": int}
 
 validate_lean(lean_source)
-  → {"success": bool, "errors": [...]}
+  → {"success": bool, "proven": bool, "errors": [...]}
+
+verify_proof(lean_source)
+  → {"success": true, "proven": bool, "verified": bool} (needs Lean >= 4.35.0 workspace, else supported:false)
 
 get_mathlib_search(query)
-  → {"results": [{"name": "...", "statement": "..."}]}
+  → {"success": true, "results": [{"name": "...", "statement": "..."}]}
+
+leanforge_shutdown()
+  → {"success": true} then the process exits (use before restarts)
 ```
 
 ## Typical escalation for hard problems

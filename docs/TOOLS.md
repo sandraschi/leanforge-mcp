@@ -1,7 +1,10 @@
 # Tool Reference
 
-All tools return structured JSON. `submit_theorem` and `submit_lean_file` return
-immediately -- proof search runs in the background. Use `get_proof_status` to poll.
+All tools return structured JSON with `success` (bool) and `message`
+(human-readable) keys on every path. `submit_theorem` and `submit_lean_file`
+return immediately -- proof search runs in the background. Use
+`get_proof_status` to poll. Unknown ids keep a legacy `error` key alongside
+`success: false` for backward compatibility.
 
 ---
 
@@ -230,16 +233,58 @@ Cancel a running proof job.
 
 **Returns:**
 ```json
-{"job_id": "uuid", "status": "cancelled"}
+{"success": true, "job_id": "uuid", "status": "cancelled", "message": "Job uuid cancelled."}
 ```
 
 Or if the job isn't live in the current process:
 ```json
-{"job_id": "uuid", "status": "running", "message": "No live task -- job is already running."}
+{"success": true, "job_id": "uuid", "status": "running", "message": "No live task -- job is already running."}
+```
+
+Or if the id is unknown:
+```json
+{"success": false, "error": "Job uuid not found.", "message": "Job uuid not found."}
 ```
 
 Note: cross-process cancel (MCP server vs webapp backend) is not yet implemented
 (P1-6 in the assessment). Cancel from the same process that started the job.
+
+---
+
+## leanforge_shutdown
+
+Gracefully shut down the server. Cancels live proof jobs, then exits ~500 ms
+after responding (so the reply flushes first). Use before upgrades/restarts.
+
+**Returns:**
+```json
+{"success": true, "message": "leanforge-mcp shutting down in ~500 ms"}
+```
+
+---
+
+## REST API (webapp backend, port 10867)
+
+Same-origin via the Vite proxy (`/api/...`). The Tauri desktop build may use
+absolute backend URLs behind its Tauri gate only.
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/health` | Liveness probe (`{"status": "ok", ...}`). |
+| `GET /api/status` | Full status: workspace, DB, config, job counts. |
+| `GET /api/capabilities` | MCP tool registry for the Tools page. |
+| `GET /api/v1/diagnostics` | Tools + system + recent log errors (CUA-NSIS smoke). |
+| `GET /api/logs?limit=&level=` | Server log tail for the Logs page. |
+| `GET /api/jobs?status=&limit=` | Job list (powers the Inbox page filters). |
+| `POST /api/jobs`, `POST /api/jobs/lean-file` | Submit theorems/files. |
+| `GET /api/jobs/{id}`, `POST /api/jobs/{id}/cancel` | Inspect / cancel. |
+| `GET /api/jobs/{id}/stream` | SSE live attempt stream. |
+| `GET /api/problems`, `POST /api/problems`, `PUT /api/problems/{id}`, `DELETE /api/problems/{id}` | Problem library CRUD. |
+| `GET /api/skills`, `GET /api/skills/{name}` | Skill listing + content (Chat preprompt). |
+| `GET /api/docs`, `GET /api/docs/{name}` | Whitelisted markdown docs for Help. |
+| `GET /api/llm/providers`, `GET /api/llm/discover`, `GET /api/llm/models`, `GET /api/llm/onboarding` | LLM registry (Settings page). Cloud entries are configured-flags only, never keys. |
+| `POST /api/llm/chat`, `POST /api/llm/chat/stream` | Backend chat proxy (SSE, OpenAI-style chunks). The ONLY path the Chat page uses — keys never leave the server. |
+| `POST /api/shutdown` | Orderly backend exit (fleet launcher calls this before bouncing the service). |
 
 ---
 
