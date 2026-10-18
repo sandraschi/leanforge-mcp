@@ -11,6 +11,7 @@ import os
 from dataclasses import dataclass, field
 
 import anthropic
+from anthropic.types import TextBlock
 from openai import AsyncOpenAI
 
 from leanforge_mcp.core.config import LLMConfig, LLMTierConfig
@@ -90,6 +91,8 @@ class LLMClient:
             system=system,
             messages=[{"role": "user", "content": user}],
         )
-        if message.content and hasattr(message.content[0], "text"):
-            return message.content[0].text
+        if message.content:
+            first = message.content[0]
+            if isinstance(first, TextBlock):
+                return first.text
         return ""

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Protocol
 
 from leanforge_mcp.core.agent import run_parallel_agents
 from leanforge_mcp.core.config import Config
@@ -18,6 +19,23 @@ from leanforge_mcp.core.lean_client import LeanClient
 from leanforge_mcp.core.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
+
+
+class JobEventSink(Protocol):
+    """Structural interface for live job-event publishers (webapp JobEventBus)."""
+
+    def publish_job_status(self, job_id: str, status: str, **extra) -> None: ...
+    def publish_attempt(
+        self,
+        job_id: str,
+        agent_index: int,
+        turn: int,
+        compiler_output: str,
+        model: str,
+        success: bool,
+        **extra,
+    ) -> None: ...
+
 
 # Process-level fallback set by the server lifespan. The lifespan-context
 # route through mounted child routers is fragile across fastmcp versions
@@ -43,7 +61,7 @@ class Runner:
         config: Config,
         job_manager: JobManager,
         lean: LeanClient,
-        event_bus: object | None = None,
+        event_bus: JobEventSink | None = None,
     ):
         self.config = config
         self.jobs = job_manager

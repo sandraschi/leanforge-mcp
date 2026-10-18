@@ -173,7 +173,7 @@ class JobManager:
             # process's own Runner is still working on it.
             db.row_factory = aiosqlite.Row
             async with db.execute("SELECT id, owner_pid, owner_started_at FROM jobs WHERE status='running'") as cursor:
-                running = await cursor.fetchall()
+                running = list(await cursor.fetchall())
             orphaned = [r["id"] for r in running if not self._owner_alive(r["owner_pid"], r["owner_started_at"])]
             if orphaned:
                 now = self._now()

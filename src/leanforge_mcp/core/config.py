@@ -5,6 +5,9 @@ from __future__ import annotations
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Literal
+
+TransportName = Literal["stdio", "http", "sse", "streamable-http"]
 
 # Repo checkout root (src/leanforge_mcp/core/config.py -> parents[3]).
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -79,7 +82,7 @@ class AgentConfig:
 
 @dataclass
 class ServerConfig:
-    transport: str = "stdio"
+    transport: TransportName = "stdio"
     host: str = "127.0.0.1"
     port: int = 8765
 
@@ -100,7 +103,7 @@ class Config:
     logging: LoggingConfig = field(default_factory=LoggingConfig)
 
 
-def _from_dict(cls, data: dict):
+def _from_dict(cls: type, data: dict):
     """Recursively populate a dataclass from a dict."""
     import dataclasses
 
@@ -110,7 +113,7 @@ def _from_dict(cls, data: dict):
     for f in dataclasses.fields(cls):
         if f.name in data:
             val = data[f.name]
-            if dataclasses.is_dataclass(f.type) or (isinstance(f.type, type) and dataclasses.is_dataclass(f.type)):
+            if isinstance(f.type, type) and dataclasses.is_dataclass(f.type):
                 kwargs[f.name] = _from_dict(f.type, val)
             else:
                 kwargs[f.name] = val
