@@ -4,7 +4,7 @@
     "version": "0.1.0",
     "identifier": "com.sandraschi.leanforge-mcp",
     "build": {
-        "frontendDist": "../webapp/dist"
+        "frontendDist": "../webapp/frontend/dist"
     },
     "app": {
         "windows": [
@@ -41,4 +41,3 @@
     },
     "plugins": {}
 }
-
