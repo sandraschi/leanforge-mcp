@@ -1,0 +1,6 @@
+{
+  "name": "leanforge-mcp",
+  "description": "Lean 4 proof-search plugin: session context for Claude Code",
+  "version": "0.1.0",
+  "hooks": "./hooks/hooks.json"
+}

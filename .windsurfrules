@@ -1,0 +1,21 @@
+# leanforge-mcp — Windsurf rules
+
+## Session Context
+
+Before starting work in this repo, load tool awareness:
+
+- MCP server: `leanforge-mcp` (stdio: `uv run python -m leanforge_mcp`)
+- Web backend: FastAPI on :10867 (`uv run python -m webapp.backend.main`)
+- Frontend: Vite on :10868 (`webapp/frontend`, bun)
+- Read `AGENTS.md` (stack, layout, critical rules) and `docs/ONBOARDING.md`
+  (setup, costs, pitfalls) before changing behavior.
+- Gates: `uv run ruff check src/ webapp/backend/` + `uv run pytest tests/ -q`
+  + `bun run check` + `bun run biome:ci` in `webapp/frontend`.
+- Sync venv with `uv sync --extra dev --extra web` (bare `uv sync` prunes dev+web).
+- All MCP tools return `success` + `message`; keep it that way.
+- Never commit `.env`, `config.toml`, `data/`, or `*.mcpb`.
+
+## Stack
+
+Python 3.12+, FastMCP >= 3.4.4, Lean 4 via elan + Mathlib, Ruff, pytest,
+React + Vite + Tailwind + Zustand, Biome. Dark theme only (zinc-950).

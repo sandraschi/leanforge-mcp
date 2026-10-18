@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'leanforge-mcp: MCP stdio via `uv run python -m leanforge_mcp`; backend :10867; frontend :10868. Read AGENTS.md + docs/ONBOARDING.md first. Gates: ruff/pytest (py) + tsc/biome (webapp/frontend). Venv: uv sync --extra dev --extra web.'"
+          }
+        ]
+      }
+    ]
+  }
+}
