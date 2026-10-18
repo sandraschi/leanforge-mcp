@@ -18,14 +18,31 @@ router = FastMCP("verify")
         "supported=false with the upgrade path. Slow (minutes for Mathlib proofs) -- "
         "use for results that matter, not per-turn checking."
     ),
+    annotations={"readOnlyHint": True, "openWorldHint": True},
+    output_schema={"type": "object"},
 )
 async def verify_proof(
     lean_source: str,
     ctx: Context,
 ) -> dict:
+    """Re-verify Lean 4 source with independent verified kernels.
+
+    ## Return Format
+    `{"success": True, "proven": bool, "verified": bool, "supported": bool,
+    "toolchain": str, "kernels": [...], "message": str}`. `success` means the
+    check ran; `verified` means every kernel accepted.
+    `{"success": False, "status": ..., "message": str}` when setup is pending
+    or failed, or the input is not proven.
+
+    ## Examples
+    `verify_proof("import Mathlib\\nexample : 1 = 1 := rfl\\n")`
+    -> `{"success": True, "proven": True, "verified": ..., ...}` (needs a
+    Lean >= 4.35.0 workspace for kernel replay, else `supported: False`).
+    """
     runner = get_runner(ctx)
     if runner.lean.setup_in_progress:
         return {
+            "success": False,
             "proven": False,
             "verified": False,
             "status": "pending",
@@ -33,6 +50,7 @@ async def verify_proof(
         }
     if runner.lean.setup_error:
         return {
+            "success": False,
             "proven": False,
             "verified": False,
             "status": "error",
@@ -41,6 +59,7 @@ async def verify_proof(
     compiled = await runner.lean.compile(lean_source)
     if not compiled.proven:
         return {
+            "success": False,
             "proven": False,
             "verified": False,
             "has_sorry": compiled.has_sorry,
@@ -56,6 +75,7 @@ async def verify_proof(
         timeout=cfg.verify_timeout,
     )
     return {
+        "success": True,
         "proven": True,
         "verified": result.all_accepted,
         "supported": result.supported,

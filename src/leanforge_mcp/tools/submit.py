@@ -65,16 +65,33 @@ class SubmitLeanFileInput(BaseModel):
         "use get_proof_status to poll. The server runs parallel agents looping "
         "LLM-propose -> Lean-compile -> error-feedback until proven or budget exhausted."
     ),
+    annotations={"openWorldHint": True},
+    output_schema={"type": "object"},
 )
 async def submit_theorem(input: SubmitTheoremInput, ctx: Context) -> dict:
+    """Submit a theorem for formal proof search.
+
+    ## Return Format
+    `{"success": True, "job_id": str, "status": "queued", "tier": int,
+    "parallel_agents": int, "max_turns": int, "message": str}` on success.
+    `{"success": False, "status": "pending"|"error", "message": str}` when the
+    Lean workspace is not ready.
+
+    ## Examples
+    `submit_theorem({"statement": "forall n : Nat, n + 0 = n"})`
+    -> `{"success": True, "job_id": "abc-123", "status": "queued", ...}`.
+    Poll `get_proof_status("abc-123")` every 10-30s.
+    """
     runner = get_runner(ctx)
     if runner.lean.setup_in_progress:
         return {
+            "success": False,
             "status": "pending",
             "message": f"Leanforge setup running: {runner.lean.setup_status}. Try again shortly.",
         }
     if runner.lean.setup_error:
         return {
+            "success": False,
             "status": "error",
             "message": f"Leanforge setup failed: {runner.lean.setup_error}. Fix installation files.",
         }
@@ -95,6 +112,7 @@ async def submit_theorem(input: SubmitTheoremInput, ctx: Context) -> dict:
     )
 
     return {
+        "success": True,
         "job_id": job_id,
         "status": "queued",
         "tier": input.tier,
@@ -109,22 +127,41 @@ async def submit_theorem(input: SubmitTheoremInput, ctx: Context) -> dict:
         "Submit a complete Lean 4 file with sorry placeholders directly. "
         "Ideal for MiniF2F or AlphaProof Nexus problem stubs that are already formalized."
     ),
+    annotations={"openWorldHint": True},
+    output_schema={"type": "object"},
 )
 async def submit_lean_file(input: SubmitLeanFileInput, ctx: Context) -> dict:
+    """Submit a complete Lean 4 file with sorry placeholders.
+
+    ## Return Format
+    `{"success": True, "job_id": str, "status": "queued", "description": str,
+    "sorry_count": int, "message": str}` on success.
+    `{"success": False, "message": str, "hint": str}` when the source has no
+    sorry, or `{"success": False, "status": ..., "message": str}` when setup
+    is not ready.
+
+    ## Examples
+    `submit_lean_file({"lean_source": "import Mathlib\\ntheorem t : 1 = 1 := by\\n  sorry",
+    "description": "MiniF2F warmup"})` -> `{"success": True, "job_id": ..., "sorry_count": 1}`.
+    """
     if "sorry" not in input.lean_source:
         return {
+            "success": False,
             "error": "No sorry found in Lean source. Nothing to prove.",
+            "message": "No sorry found in Lean source. Nothing to prove.",
             "hint": "Add sorry where you want the agent to fill in proofs.",
         }
 
     runner = get_runner(ctx)
     if runner.lean.setup_in_progress:
         return {
+            "success": False,
             "status": "pending",
             "message": f"Leanforge setup running: {runner.lean.setup_status}. Try again shortly.",
         }
     if runner.lean.setup_error:
         return {
+            "success": False,
             "status": "error",
             "message": f"Leanforge setup failed: {runner.lean.setup_error}. Fix installation files.",
         }
@@ -137,6 +174,7 @@ async def submit_lean_file(input: SubmitLeanFileInput, ctx: Context) -> dict:
     )
 
     return {
+        "success": True,
         "job_id": job_id,
         "status": "queued",
         "description": input.description,

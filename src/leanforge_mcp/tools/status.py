@@ -15,17 +15,34 @@ router = FastMCP("status")
         "Get the status of a proof search job. If complete, returns the proven "
         "Lean 4 file. If running, returns turn count and latest attempt. Poll every 10-30s."
     ),
+    annotations={"readOnlyHint": True},
+    output_schema={"type": "object"},
+    app=True,
 )
 async def get_proof_status(
     job_id: str,
     ctx: Context,
 ) -> dict:
+    """Get the status of a proof search job.
+
+    ## Return Format
+    `{"success": True, "job_id": str, "status": str, "description": str,
+    "created_at": str, "updated_at": str, ...}`. When `status` is "complete",
+    includes `"proof"` (the verified Lean file). Otherwise includes
+    `"latest_turn"`, `"latest_compiler_output"`, `"latest_model"`.
+    `{"success": False, "message": str}` when the job id is unknown.
+
+    ## Examples
+    `get_proof_status("abc-123")`
+    -> `{"success": True, "status": "running", "latest_turn": 7, ...}`.
+    """
     runner = get_runner(ctx)
     job = await runner.jobs.get_job(job_id)
     if job is None:
-        return {"error": f"Job {job_id} not found."}
+        return {"success": False, "error": f"Job {job_id} not found.", "message": f"Job {job_id} not found."}
 
     out = {
+        "success": True,
         "job_id": job.id,
         "status": job.status,
         "description": job.description,
@@ -48,6 +65,8 @@ async def get_proof_status(
         "List proof attempts for a job, with Lean source and compiler feedback per turn. "
         "Useful for understanding why a search is stuck or inspecting the trajectory."
     ),
+    annotations={"readOnlyHint": True},
+    output_schema={"type": "object"},
 )
 async def list_attempts(
     job_id: str,
@@ -55,9 +74,21 @@ async def list_attempts(
     agent_index: int | None = None,
     last_n: int = Field(default=10, ge=1, le=100),
 ) -> dict:
+    """List proof attempts for a job.
+
+    ## Return Format
+    `{"success": True, "job_id": str, "count": int, "attempts": [...]}` where
+    each attempt has `agent_index`, `turn`, `success`, `llm_model` and
+    `compiler_output` (truncated to 400 chars).
+
+    ## Examples
+    `list_attempts("abc-123", last_n=5)` -> last 5 turns across all agents.
+    `list_attempts("abc-123", agent_index=0)` -> one subagent's trajectory.
+    """
     runner = get_runner(ctx)
     attempts = await runner.jobs.get_attempts(job_id, agent_index=agent_index, last_n=last_n)
     return {
+        "success": True,
         "job_id": job_id,
         "count": len(attempts),
         "attempts": [
@@ -75,15 +106,29 @@ async def list_attempts(
 
 @router.tool(
     description="List all jobs with status and summary.",
+    annotations={"readOnlyHint": True},
+    output_schema={"type": "object"},
+    app=True,
 )
 async def list_jobs(
     ctx: Context,
     status_filter: str | None = None,
     limit: int = Field(default=20, ge=1, le=100),
 ) -> dict:
+    """List all jobs with status and summary.
+
+    ## Return Format
+    `{"success": True, "count": int, "jobs": [...]}` where each job has
+    `job_id`, `status`, `description` and `created_at`.
+
+    ## Examples
+    `list_jobs()` -> the 20 most recent jobs.
+    `list_jobs(status_filter="complete")` -> only proven jobs.
+    """
     runner = get_runner(ctx)
     jobs = await runner.jobs.list_jobs(status=status_filter, limit=limit)
     return {
+        "success": True,
         "count": len(jobs),
         "jobs": [
             {
@@ -102,11 +147,24 @@ async def list_jobs(
         "Run the Lean 4 compiler on arbitrary source and return output. No job tracking, "
         "no LLM -- raw compile. Use to test a proof or debug Lean syntax before submitting."
     ),
+    annotations={"readOnlyHint": True},
+    output_schema={"type": "object"},
 )
 async def validate_lean(
     lean_source: str,
     ctx: Context,
 ) -> dict:
+    """Run the Lean 4 compiler on arbitrary source.
+
+    ## Return Format
+    `{"success": bool, "proven": bool, "has_sorry": bool, "errors": [...],
+    "warnings": [...], "message": str}`. `success` is the compile exit status;
+    `proven` additionally requires no `sorry`.
+
+    ## Examples
+    `validate_lean("import Mathlib\\nexample : 1 = 1 := rfl\\n")`
+    -> `{"success": True, "proven": True, ...}`.
+    """
     runner = get_runner(ctx)
     if runner.lean.setup_in_progress:
         return {
@@ -127,4 +185,5 @@ async def validate_lean(
         "has_sorry": result.has_sorry,
         "errors": result.errors,
         "warnings": result.warnings,
+        "message": "Proven: sorry-free compile." if result.proven else "Not proven: see errors.",
     }

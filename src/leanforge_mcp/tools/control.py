@@ -15,16 +15,37 @@ logger = logging.getLogger(__name__)
 router = FastMCP("control")
 
 
-@router.tool(description="Cancel a running proof search job.")
+@router.tool(
+    description="Cancel a running proof search job.",
+    annotations={"destructiveHint": True},
+    output_schema={"type": "object"},
+)
 async def cancel_job(job_id: str, ctx: Context) -> dict:
+    """Cancel a running proof search job.
+
+    ## Return Format
+    `{"success": True, "job_id": str, "status": "cancelled", "message": str}`
+    when a live task was stopped. `{"success": True, "job_id": str,
+    "status": str, "message": str}` when no live task exists (already in a
+    terminal state). `{"success": False, "message": str}` when unknown.
+
+    ## Examples
+    `cancel_job("abc-123")` -> `{"success": True, "status": "cancelled"}`.
+    """
     runner = get_runner(ctx)
     cancelled = await runner.cancel(job_id)
     if cancelled:
-        return {"job_id": job_id, "status": "cancelled"}
+        return {
+            "success": True,
+            "job_id": job_id,
+            "status": "cancelled",
+            "message": f"Job {job_id} cancelled.",
+        }
     job = await runner.jobs.get_job(job_id)
     if job is None:
-        return {"error": f"Job {job_id} not found."}
+        return {"success": False, "error": f"Job {job_id} not found.", "message": f"Job {job_id} not found."}
     return {
+        "success": True,
         "job_id": job_id,
         "status": job.status,
         "message": f"No live task -- job is already {job.status}.",
@@ -48,6 +69,7 @@ def _delayed_exit() -> None:
         "Use before upgrades or restarts."
     ),
     annotations={"destructiveHint": True},
+    output_schema={"type": "object"},
 )
 async def leanforge_shutdown(ctx: Context) -> dict:
     """Graceful self-termination.
