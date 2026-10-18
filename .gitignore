@@ -23,3 +23,6 @@ dist/
 # on every pack. Never hand-edit, never commit.
 mcpb/src/
 
+
+# assfix working snapshots -- regenerable, never commit (committed copy lives in docs/assess-reports/)
+reports/
