@@ -98,7 +98,9 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 | `list_attempts` | Inspect the attempt trajectory per agent/turn |
 | `list_jobs` | List all jobs with status summary |
 | `validate_lean` | Raw Lean 4 compile -- no job tracking |
+| `verify_proof` | Re-check a proven file with verified kernels (con-leche, con-ron) -- needs workspace on Lean >= 4.35.0, see [docs/VERIFIED_KERNELS.md](docs/VERIFIED_KERNELS.md) |
 | `cancel_job` | Cancel a running job |
+| `leanforge_shutdown` | Gracefully shut down the server (cancels live jobs, exits) |
 | `get_mathlib_search` | Natural language search over Mathlib theorems |
 
 ---
@@ -122,6 +124,7 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 | [docs/TOOLS.md](docs/TOOLS.md) | Full tool reference with parameters and examples |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Proof loop, tier escalation, job lifecycle, SQLite schema |
 | [docs/LEAN.md](docs/LEAN.md) | Lean 4 language reference, tactic guide, bibliography, link collection |
+| [docs/VERIFIED_KERNELS.md](docs/VERIFIED_KERNELS.md) | Why `verify_proof` exists, what con-leche/con-ron are, workspace upgrade path |
 | [docs/LEAN_PRIMER.md](docs/LEAN_PRIMER.md) | Quick Lean 4 intro for engineers (short version) |
 | [docs/ALPHAPROOF_NEXUS.md](docs/ALPHAPROOF_NEXUS.md) | The technique: AlphaProof Nexus paper explained |
 | [docs/COVERAGE_GAP.md](docs/COVERAGE_GAP.md) | Why DeepMind got MSM coverage and a startup wouldn't |

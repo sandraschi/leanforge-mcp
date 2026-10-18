@@ -8,6 +8,30 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added (2026-10-18 -- assfix fleet audit, score 12/100)
+
+- `leanforge_shutdown` MCP tool + `POST /api/shutdown` REST endpoint
+  (orderly self-termination: cancel live jobs, exit ~500 ms after
+  responding). Reports: `reports/assess-2026-10-18.md`,
+  `docs/assess-reports/2026-10-18.md`.
+- `.env.example` (API-key template, no secrets).
+- `webapp/frontend/src/vite-env.d.ts` (fixes `tsc --noEmit` TS2882).
+
+### Fixed (2026-10-18 -- assfix fleet audit)
+
+- `mcpb/manifest.json`: `${PWD}` -> `${__dirname}` (Claude Desktop does
+  not expand `${PWD}`; bundle failed on real installs).
+- `pyproject.toml`: removed `S110`/`S112` from ruff `ignore` (silent
+  `except: pass/continue` footgun; verified zero hits), added `T20`
+  print-ban + per-file-ignores for entry points, deduped the ignore list.
+- `justfile` `e2e` recipe: `cd` + test on separate lines ran the test in
+  the wrong directory (just runs each line as its own shell); joined
+  with `;`.
+- `glama.json`: added missing `verify_proof` tool.
+- `.gitignore`: `*.bak` also covers `*.bak.*` / `*.bak-*` variants.
+- CORS: `allow_origins=["*"]` replaced with explicit localhost/Tauri
+  origins + LAN/Tailscale `allow_origin_regex`.
+
 ### Fixed (2026-07-08 to 2026-07-09 -- Phase B correctness, see docs/ASSESSMENT_2026-06-24.md)
 
 Every P1 correctness item plus P2-4 (stateless prompting) closed in one
