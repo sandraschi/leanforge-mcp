@@ -1,12 +1,8 @@
 import type { Attempt } from "../api";
 
-export default function AttemptTimeline({
-  attempts,
-}: {
-  attempts: Attempt[];
-}) {
+export default function AttemptTimeline({ attempts }: { attempts: Attempt[] }) {
   if (attempts.length === 0) {
-    return <p className="text-gray-500 text-sm">No attempts yet.</p>;
+    return <p className="text-zinc-400 text-sm">No attempts yet.</p>;
   }
 
   return (

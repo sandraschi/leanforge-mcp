@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { submitTheorem, submitLeanFile } from "../api";
+import { submitLeanFile, submitTheorem } from "../api";
 
 export default function NewTheorem() {
   const navigate = useNavigate();
@@ -28,14 +28,25 @@ export default function NewTheorem() {
     setSending(true);
     setError("");
     try {
-      const body = mode === "simple"
-        ? { statement: simple.statement, hints: simple.hints || undefined,
-            tier: simple.tier, parallel_agents: simple.parallel_agents, max_turns: simple.max_turns }
-        : { lean_source: file.lean_source, description: file.description,
-            tier: file.tier, parallel_agents: file.parallel_agents, max_turns: file.max_turns };
-      const fn = mode === "simple" ? submitTheorem : submitLeanFile;
-      const result = await fn(body as any);
-      navigate(`/jobs/${result.job_id}`);
+      if (mode === "simple") {
+        const result = await submitTheorem({
+          statement: simple.statement,
+          hints: simple.hints || undefined,
+          tier: simple.tier,
+          parallel_agents: simple.parallel_agents,
+          max_turns: simple.max_turns,
+        });
+        navigate(`/jobs/${result.job_id}`);
+      } else {
+        const result = await submitLeanFile({
+          lean_source: file.lean_source,
+          description: file.description,
+          tier: file.tier,
+          parallel_agents: file.parallel_agents,
+          max_turns: file.max_turns,
+        });
+        navigate(`/jobs/${result.job_id}`);
+      }
     } catch (e) {
       setError(String(e));
     } finally {
@@ -49,6 +60,7 @@ export default function NewTheorem() {
 
       <div className="flex gap-2 mb-4">
         <button
+          type="button"
           onClick={() => setMode("simple")}
           className={`px-3 py-1 rounded text-sm border ${
             mode === "simple"
@@ -59,6 +71,7 @@ export default function NewTheorem() {
           Simple
         </button>
         <button
+          type="button"
           onClick={() => setMode("file")}
           className={`px-3 py-1 rounded text-sm border ${
             mode === "file"
@@ -73,18 +86,32 @@ export default function NewTheorem() {
       {mode === "simple" ? (
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Theorem Statement</label>
+            <label
+              htmlFor="nt-statement"
+              className="text-sm text-zinc-400 block mb-1"
+            >
+              Theorem Statement
+            </label>
             <textarea
+              id="nt-statement"
               value={simple.statement}
-              onChange={(e) => setSimple({ ...simple, statement: e.target.value })}
+              onChange={(e) =>
+                setSimple({ ...simple, statement: e.target.value })
+              }
               placeholder="for all n : Nat, 2 * sum i in range (n+1), i = n * (n+1)"
               rows={3}
               className="w-full bg-surface-2 border border-border rounded px-3 py-2 text-sm font-mono"
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Hints (optional)</label>
+            <label
+              htmlFor="nt-hints-simple"
+              className="text-sm text-zinc-400 block mb-1"
+            >
+              Hints (optional)
+            </label>
             <input
+              id="nt-hints-simple"
               value={simple.hints}
               onChange={(e) => setSimple({ ...simple, hints: e.target.value })}
               placeholder="Mathlib lemma names or strategy hints"
@@ -95,20 +122,36 @@ export default function NewTheorem() {
       ) : (
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Lean 4 Source</label>
+            <label
+              htmlFor="nt-source"
+              className="text-sm text-zinc-400 block mb-1"
+            >
+              Lean 4 Source
+            </label>
             <textarea
+              id="nt-source"
               value={file.lean_source}
-              onChange={(e) => setFile({ ...file, lean_source: e.target.value })}
-              placeholder='import Mathlib\ntheorem example : 1 + 1 = 2 := by\n  sorry'
+              onChange={(e) =>
+                setFile({ ...file, lean_source: e.target.value })
+              }
+              placeholder="import Mathlib\ntheorem example : 1 + 1 = 2 := by\n  sorry"
               rows={8}
               className="w-full bg-surface-2 border border-border rounded px-3 py-2 text-sm font-mono"
             />
           </div>
           <div>
-            <label className="text-sm text-gray-400 block mb-1">Description</label>
+            <label
+              htmlFor="nt-description"
+              className="text-sm text-zinc-400 block mb-1"
+            >
+              Description
+            </label>
             <input
+              id="nt-description"
               value={file.description}
-              onChange={(e) => setFile({ ...file, description: e.target.value })}
+              onChange={(e) =>
+                setFile({ ...file, description: e.target.value })
+              }
               placeholder="Optional description"
               className="w-full bg-surface-2 border border-border rounded px-3 py-2 text-sm"
             />
@@ -118,8 +161,11 @@ export default function NewTheorem() {
 
       <div className="grid grid-cols-3 gap-4 mt-4">
         <div>
-          <label className="text-xs text-gray-500 block mb-1">Starting Tier</label>
+          <label htmlFor="nt-tier" className="text-sm text-zinc-400 block mb-1">
+            Starting Tier
+          </label>
           <select
+            id="nt-tier"
             value={mode === "simple" ? simple.tier : file.tier}
             onChange={(e) => {
               const v = Number(e.target.value);
@@ -135,12 +181,20 @@ export default function NewTheorem() {
           </select>
         </div>
         <div>
-          <label className="text-xs text-gray-500 block mb-1">Parallel Agents</label>
+          <label
+            htmlFor="nt-agents"
+            className="text-sm text-zinc-400 block mb-1"
+          >
+            Parallel Agents
+          </label>
           <input
+            id="nt-agents"
             type="number"
             min={1}
             max={16}
-            value={mode === "simple" ? simple.parallel_agents : file.parallel_agents}
+            value={
+              mode === "simple" ? simple.parallel_agents : file.parallel_agents
+            }
             onChange={(e) => {
               const v = Number(e.target.value);
               mode === "simple"
@@ -151,8 +205,14 @@ export default function NewTheorem() {
           />
         </div>
         <div>
-          <label className="text-xs text-gray-500 block mb-1">Max Turns</label>
+          <label
+            htmlFor="nt-turns"
+            className="text-sm text-zinc-400 block mb-1"
+          >
+            Max Turns
+          </label>
           <input
+            id="nt-turns"
             type="number"
             min={1}
             max={1000}
@@ -171,6 +231,7 @@ export default function NewTheorem() {
       {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
 
       <button
+        type="button"
         onClick={handleSubmit}
         disabled={sending}
         className="mt-6 px-6 py-2 bg-indigo-600 rounded text-sm font-medium hover:bg-indigo-500 disabled:opacity-50"

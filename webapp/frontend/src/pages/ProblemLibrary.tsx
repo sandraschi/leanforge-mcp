@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Problem } from "../api";
-import { API_BASE, fetchProblems, createProblem, deleteProblem } from "../api";
+import { API_BASE, createProblem, deleteProblem, fetchProblems } from "../api";
 
 export default function ProblemLibrary() {
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -33,8 +33,13 @@ export default function ProblemLibrary() {
     await createProblem(form);
     setShowCreate(false);
     setForm({
-      title: "", statement: "", lean_source: "", source: "user",
-      difficulty: "medium", tags: "", notes: "",
+      title: "",
+      statement: "",
+      lean_source: "",
+      source: "user",
+      difficulty: "medium",
+      tags: "",
+      notes: "",
     });
     load();
   };
@@ -46,8 +51,10 @@ export default function ProblemLibrary() {
   };
 
   const handleSubmitJob = async (p: Problem) => {
-    const source = p.lean_source || `import Mathlib\n\ntheorem ${p.title.replace(/\s+/g, "_")} : ${p.statement} := by\n  sorry\n`;
-    const res = await fetch(API_BASE + "/jobs", {
+    const source =
+      p.lean_source ||
+      `import Mathlib\n\ntheorem ${p.title.replace(/\s+/g, "_")} : ${p.statement} := by\n  sorry\n`;
+    const res = await fetch(`${API_BASE}/jobs`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ statement: p.statement, lean_stub: source }),
@@ -63,20 +70,22 @@ export default function ProblemLibrary() {
         <div className="flex gap-2">
           {["", "miniF2F", "erdos", "putnam", "user"].map((s) => (
             <button
+              type="button"
               key={s}
               onClick={() => setSourceFilter(s)}
-              className={`px-3 py-1 rounded border text-xs ${
+              className={`px-3 py-1 rounded border text-sm ${
                 sourceFilter === s
                   ? "border-indigo-500 bg-indigo-950/40 text-indigo-300"
-                  : "border-border text-gray-400 hover:text-gray-200"
+                  : "border-border text-zinc-400 hover:text-zinc-200"
               }`}
             >
               {s || "all"}
             </button>
           ))}
           <button
+            type="button"
             onClick={() => setShowCreate(true)}
-            className="px-3 py-1 rounded border border-indigo-600 text-indigo-300 text-xs hover:bg-indigo-950/30"
+            className="px-3 py-1 rounded border border-indigo-600 text-indigo-300 text-sm hover:bg-indigo-950/30"
           >
             + New
           </button>
@@ -103,15 +112,25 @@ export default function ProblemLibrary() {
             <textarea
               placeholder="Optional Lean stub (with sorry)"
               value={form.lean_source}
-              onChange={(e) => setForm({ ...form, lean_source: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, lean_source: e.target.value })
+              }
               rows={3}
               className="w-full bg-surface border border-border rounded px-3 py-2 text-sm font-mono"
             />
             <div className="flex gap-2">
-              <button onClick={handleCreate} className="px-4 py-1.5 bg-indigo-600 rounded text-sm hover:bg-indigo-500">
+              <button
+                type="button"
+                onClick={handleCreate}
+                className="px-4 py-1.5 bg-indigo-600 rounded text-sm hover:bg-indigo-500"
+              >
                 Save
               </button>
-              <button onClick={() => setShowCreate(false)} className="px-4 py-1.5 border border-border rounded text-sm text-gray-400">
+              <button
+                type="button"
+                onClick={() => setShowCreate(false)}
+                className="px-4 py-1.5 border border-border rounded text-sm text-gray-400"
+              >
                 Cancel
               </button>
             </div>
@@ -120,31 +139,38 @@ export default function ProblemLibrary() {
       )}
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-sm text-zinc-400">Loading...</p>
       ) : problems.length === 0 ? (
-        <p className="text-gray-500 text-center py-16">
+        <p className="text-sm text-zinc-400 text-center py-16">
           No problems yet. Create one to get started.
         </p>
       ) : (
         <div className="space-y-2">
           {problems.map((p) => (
-            <div key={p.id} className="border border-border rounded p-4 bg-surface-2">
+            <div
+              key={p.id}
+              className="border border-border rounded p-4 bg-surface-2"
+            >
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <span className="font-medium text-sm">{p.title}</span>
-                  <span className="ml-2 text-xs text-gray-500">{p.source}</span>
-                  <span className="ml-2 text-xs text-gray-500">{p.difficulty}</span>
+                  <span className="ml-2 text-sm text-zinc-400">{p.source}</span>
+                  <span className="ml-2 text-sm text-zinc-400">
+                    {p.difficulty}
+                  </span>
                 </div>
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => handleSubmitJob(p)}
-                    className="text-xs px-2 py-1 rounded border border-indigo-600 text-indigo-300 hover:bg-indigo-950/30"
+                    className="text-sm px-2 py-1 rounded border border-indigo-600 text-indigo-300 hover:bg-indigo-950/30"
                   >
                     Prove
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleDelete(p.id)}
-                    className="text-xs px-2 py-1 rounded border border-red-700 text-red-300 hover:bg-red-950/30"
+                    className="text-sm px-2 py-1 rounded border border-red-700 text-red-300 hover:bg-red-950/30"
                   >
                     Delete
                   </button>
@@ -156,7 +182,10 @@ export default function ProblemLibrary() {
               {p.tags && (
                 <div className="flex gap-1 mt-2">
                   {p.tags.split(",").map((t) => (
-                    <span key={t} className="text-xs px-1.5 py-0.5 rounded bg-gray-800 text-gray-400">
+                    <span
+                      key={t}
+                      className="text-xs px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300"
+                    >
                       {t.trim()}
                     </span>
                   ))}
