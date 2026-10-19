@@ -286,5 +286,6 @@ components wired. Not yet validated against a live Lean + Mathlib installation.
 
 ---
 
-[Unreleased]: https://github.com/sandraschi/leanforge-mcp/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/sandraschi/leanforge-mcp/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/sandraschi/leanforge-mcp/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/sandraschi/leanforge-mcp/releases/tag/v0.1.0

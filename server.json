@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.sandraschi/leanforge-mcp",
   "description": "Lean 4 theorem prover MCP: automated proof search, mathlib integration, job management",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": {
     "url": "https://github.com/sandraschi/leanforge-mcp",
     "source": "github"
@@ -10,8 +10,8 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/sandraschi/leanforge-mcp/releases/download/v0.1.0/leanforge-mcp-v0.1.0.mcpb",
-      "fileSha256": "267c7214023a51328495d0dbd0354364dab7d91abb7b50595d0fb889ac78f00f",
+      "identifier": "https://github.com/sandraschi/leanforge-mcp/releases/download/v0.1.1/leanforge-mcp-v0.1.1.mcpb",
+      "fileSha256": "PENDING-BUNDLE-SHA256",
       "transport": {
         "type": "stdio"
       }
