@@ -11,7 +11,7 @@
     {
       "registryType": "mcpb",
       "identifier": "https://github.com/sandraschi/leanforge-mcp/releases/download/v0.1.1/leanforge-mcp-v0.1.1.mcpb",
-      "fileSha256": "PENDING-BUNDLE-SHA256",
+      "fileSha256": "b7756ae11418bbe271eedb194c3091c943f8198418047210f7e30258750d7e06",
       "transport": {
         "type": "stdio"
       }
