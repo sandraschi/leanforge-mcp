@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Job, SystemStatus } from "../api";
 import { fetchJobs, fetchStatus } from "../api";
 import StatusBadge from "../components/StatusBadge";
+import { useBackendStatus } from "../hooks/useBackendStatus";
 
 // ---------------------------------------------------------------------------
 // Hero section
@@ -77,9 +78,11 @@ function StatCard({
 function Hero({
   status,
   backendUp,
+  tauriLive,
 }: {
   status: SystemStatus | null;
   backendUp: boolean;
+  tauriLive: boolean;
 }) {
   return (
     <div className="border border-indigo-900/60 bg-indigo-950/20 rounded-lg p-6 mb-8">
@@ -95,6 +98,11 @@ function Hero({
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <StatusPill ok={backendUp} label="Backend" testid="backend-dot" />
+          {tauriLive && (
+            <span data-testid="tauri-event" className="text-xs text-zinc-500">
+              via Tauri event
+            </span>
+          )}
           <StatusPill
             ok={status?.lean_workspace.ok ?? null}
             label="Lean workspace"
@@ -301,7 +309,7 @@ export default function Dashboard() {
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [backendUp, setBackendUp] = useState(false);
 
-  const loadStatus = () => {
+  const loadStatus = useCallback(() => {
     fetchStatus()
       .then((s) => {
         setStatus(s);
@@ -311,7 +319,9 @@ export default function Dashboard() {
         setStatus(null);
         setBackendUp(false);
       });
-  };
+  }, []);
+
+  const { tauriLive } = useBackendStatus(loadStatus);
 
   const loadJobs = () => {
     setLoading(true);
@@ -385,7 +395,7 @@ export default function Dashboard() {
 
   return (
     <div data-testid="dashboard">
-      <Hero status={status} backendUp={backendUp} />
+      <Hero status={status} backendUp={backendUp} tauriLive={tauriLive} />
 
       {/* Job list */}
       <div className="flex items-center justify-between mb-4">
