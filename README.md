@@ -10,7 +10,7 @@
 
 MCP server for AI-driven formal proof search in Lean 4. Submit a theorem with `sorry`; get back a machine-verified proof. Implements Agent A from [AlphaProof Nexus](https://arxiv.org/abs/2605.22763) (DeepMind, May 2026).
 
-**Stack:** Python 3.12+ . FastMCP 3.4+ . FastAPI . React/Vite . Tailwind . Lean 4 / Mathlib
+**Stack:** Python 3.12+ . FastMCP 3.4+ . FastAPI . React/Vite . Tailwind . Zustand . Biome . Lean 4 / Mathlib
 
 ---
 
@@ -120,6 +120,7 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 | Doc | Contents |
 |-----|----------|
 | [INSTALL.md](INSTALL.md) | Prerequisites, Lean workspace setup, Claude Desktop config |
+| [docs/ONBOARDING.md](docs/ONBOARDING.md) | First-timer setup: costs, pitfalls, sanity check |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | All config options and environment variables |
 | [docs/TOOLS.md](docs/TOOLS.md) | Full tool reference with parameters and examples |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Proof loop, tier escalation, job lifecycle, SQLite schema |

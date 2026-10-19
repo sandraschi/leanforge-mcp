@@ -8,6 +8,38 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added (2026-10-19 -- assfix deferred sweep, score 16 -> 83 self-assessed)
+
+- MCP tools: `## Return Format` + `## Examples` docstrings, `success`/`message`
+  on every path (legacy `error` keys kept), `annotations=` on all tools,
+  `output_schema`, Prefab `app=True` cards on `list_jobs`/`get_proof_status`
+  (`prefab-ui` promoted to core deps).
+- Web backend: `GET /api/capabilities`, `GET /api/v1/diagnostics`,
+  `GET /api/logs`, `GET /api/llm/providers|discover|models|onboarding`,
+  `POST /api/llm/chat` + `/api/llm/chat/stream` (SSE). Chat uses the proxy
+  only -- direct browser-to-Ollama calls removed. CORS locked to explicit
+  origins + LAN/Tailscale regex (proven by pattern test).
+- Webapp: Tools/Skills/Inbox/Logs/Settings pages, LLM Zustand store, nav +
+  routes, onboarding CTA + declared MOCK previews, `data-testid` coverage,
+  a11y/contrast pass (`type="button"`, label controls, zinc-400 floor).
+  Stack: bun lockfile, Biome + `biome:ci`, `tsc` clean, `vite build` green.
+- `docs/ONBOARDING.md` (costs, pitfalls, sanity check). Pyright clean
+  (EventSink protocol, Literal transport). `just certify` mirrors CI.
+- MCPB 3-4-100 prompts (system 3156w / user 4011w / 100 examples); `mcpb`
+  bundle packs and passes the launch check (`dist/leanforge-mcp-v0.1.0.mcpb`).
+- Fleet files: `ci.yml` five-gate, pre-commit + materialised hook,
+  `.gitattributes`, `renovate.json`, session injection (cursor/windsurf/
+  copilot/claude-plugin), `scripts/mcpb-pack.ps1` shim, Tauri `frontendDist`
+  corrected to `webapp/frontend/dist`.
+
+### Fixed (2026-10-19 -- assfix deferred sweep)
+
+- `__main__.py` ran `main()` at import (broke MCPB import-isolation check).
+- `mcpb/.mcpbignore` clobbered by pack sync (patterns restored at root).
+- `webapp/backend` lint debt (F401/UP017/UP041/I001, S608 allowlist noqa).
+- `uv sync --extra dev --extra web` documented (bare sync prunes dev+web).
+- Just recipes use bun with PATH-or-USERPROFILE resolution.
+
 ### Added (2026-10-18 -- assfix fleet audit, score 12/100)
 
 - `leanforge_shutdown` MCP tool + `POST /api/shutdown` REST endpoint
