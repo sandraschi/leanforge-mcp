@@ -284,6 +284,24 @@ export async function fetchLogs(
   return apiFetch(`/logs?${params}`);
 }
 
+export interface FleetApp {
+  name: string;
+  label: string;
+  backend_port: number;
+  frontend_port: number;
+  url: string;
+  online: boolean;
+  http_status: number | null;
+  version: string | null;
+}
+
+export async function fetchFleetApps(): Promise<{
+  registered: FleetApp[];
+  experimental: FleetApp[];
+}> {
+  return apiFetch("/fleet/apps");
+}
+
 // ---------------------------------------------------------------------------
 // LLM registry + chat proxy (the ONLY path the Chat page may use)
 // ---------------------------------------------------------------------------
