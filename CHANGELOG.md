@@ -8,6 +8,21 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added (2026-10-19 -- assfix session 3 "do the rest", score 83 -> 94 self-assessed)
+
+- Lists everywhere: search/filter/sort/paginate/count on Dashboard, Inbox,
+  ProblemLibrary (Tools already had it); `data-testid` >= 3 on every page.
+- Apps Hub: `GET /api/fleet/apps` (curated registry + `FLEET_EXTRA_PORTS`,
+  live-probed) + Apps page with Registered/Experimental split.
+- Tauri: `@tauri-apps/api` dep, `useBackendStatus` event listener with HTTP
+  fallback, `useZoom` kit (levels, Ctrl+wheel/0/+/-, Ctrl+K search focus,
+  persisted, indicator), full nav.
+- Test hardening: pytest-scoped config fallback (CI was red on fresh
+  checkouts -- ghaudit caught it, fixed, CI green on re-run).
+- Skill frontmatter, README ports/env/llms rows, ghaudit report + timestamp.
+- Live proof (TestClient, in-process, 11/11): all routes serve, CORS
+  middleware denies unknown/evil origins and allows LAN/Tailscale/Tauri.
+
 ### Added (2026-10-19 -- assfix deferred sweep, score 16 -> 83 self-assessed)
 
 - MCP tools: `## Return Format` + `## Examples` docstrings, `success`/`message`
