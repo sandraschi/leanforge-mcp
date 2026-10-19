@@ -19,6 +19,11 @@ dist/
 build/
 *.mcpb
 
+# Non-MCP components (webapp, native, scripts)
+native/
+web_sota/
+scripts/
+
 # Editor / tooling backups (MCPB_PACKAGING_STANDARDS.md section 2.4)
 *.bak
 *.bak.*
@@ -26,13 +31,9 @@ build/
 *.orig
 *.rej
 
-# Pack build tooling itself -- not runtime code
+# Pack build tooling itself -- not runtime code (both path forms: this file
+# is synced to mcpb/.mcpbignore, where the mcpb CLI reads it as pack root)
 mcpb/pack.ps1
 mcpb/verify_pack.py
 pack.ps1
 verify_pack.py
-
-# Non-MCP components detected in this repo
-webapp/
-native/
-scripts/
