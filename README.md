@@ -115,6 +115,18 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 
 ---
 
+## Ports & configuration
+
+| Piece | Value |
+|-------|-------|
+| MCP server | stdio (`uv run python -m leanforge_mcp`) |
+| Web backend (FastAPI) | `http://127.0.0.1:10867` |
+| Web frontend (Vite) | `http://127.0.0.1:10868` |
+| Config file | `config.toml` (copy from `config.example.toml`; gitignored) |
+| Environment | `DEEPSEEK_API_KEY` (tier 2), `ANTHROPIC_API_KEY` (tier 3) — see `.env.example`; keys stay in server env, never in the browser |
+
+---
+
 ## Documentation
 
 | Doc | Contents |
@@ -132,6 +144,7 @@ See [INSTALL.md](INSTALL.md) for the Lean + Mathlib workspace setup (~4GB, one-t
 | [docs/BENCHMARK_RESULTS.md](docs/BENCHMARK_RESULTS.md) | MiniF2F, PutnamBench, Erdős results |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Contributing, dev setup, test commands |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common errors and fixes |
+| [llms-full.txt](llms-full.txt) | Full LLM context: tools, endpoints, config, ports |
 
 ---
 

@@ -1,3 +1,8 @@
+---
+name: lean-expert
+description: Lean 4 theorem-prover expertise for agents -- current versions, tactic cookbook, Mathlib search, compiler-error recoveries. Use when proving, debugging, or explaining Lean 4 proofs via leanforge-mcp.
+---
+
 # Lean 4 Expert -- Skill Context
 
 You are an expert on the Lean 4 theorem prover and its ecosystem. This skill
