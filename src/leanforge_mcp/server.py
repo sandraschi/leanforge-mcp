@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import sys
 from pathlib import Path
 
 from fastmcp import FastMCP
 from fastmcp.server.lifespan import lifespan as fastmcp_lifespan
 
-from leanforge_mcp.core.config import load_config
+from leanforge_mcp.core.config import Config, load_config
 from leanforge_mcp.core.job_manager import JobManager
 from leanforge_mcp.core.lean_client import LeanClient
 from leanforge_mcp.core.runner import Runner, set_runner_fallback
@@ -28,6 +29,14 @@ _CONFIG_PATH = Path(__file__).parent.parent.parent / "config.toml"
 
 def _load_config():
     if not _CONFIG_PATH.exists():
+        # Pytest sets PYTEST_CURRENT_TEST for every test phase: integration
+        # tests boot the real lifespan, which needs *a* config, not *the*
+        # user's config. Fall back to built-in defaults so fresh clones and
+        # CI (no config.toml -- it is gitignored) can run the suite.
+        # Production is unaffected: outside pytest a missing config is fatal.
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            logger.warning("config.toml not found; using built-in defaults for tests")
+            return Config()
         print(
             f"ERROR: config.toml not found at {_CONFIG_PATH}\n"
             "Copy config.example.toml to config.toml and fill in your values.",

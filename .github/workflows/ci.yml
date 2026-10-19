@@ -16,6 +16,8 @@ jobs:
       - uses: astral-sh/setup-uv@v3
       - name: Sync dev + web extras
         run: uv sync --extra dev --extra web
+      - name: Provide config for tests
+        run: if (-not (Test-Path config.toml)) { Copy-Item config.example.toml config.toml }
       - name: Ruff check
         run: uv run ruff check src/ webapp/backend/
       - name: Ruff format check

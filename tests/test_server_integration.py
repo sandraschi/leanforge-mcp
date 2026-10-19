@@ -8,7 +8,9 @@ ctx.lifespan_context. If fastmcp changes that fallback behavior, this test
 fails loudly instead of every tool call failing in production.
 
 Requires config.toml to exist (it does in this repo). Mathlib compile is stubbed
-in these tests -- see skip_lean_workspace_smoke fixture.
+in these tests -- see skip_lean_workspace_smoke fixture. On fresh checkouts
+without config.toml (gitignored), the server falls back to built-in defaults
+under pytest (PYTEST_CURRENT_TEST) so CI stays green.
 
 Run: uv run pytest tests/test_server_integration.py -v
 """
