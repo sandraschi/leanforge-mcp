@@ -14,6 +14,9 @@ export default function InboxPage() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [sortAsc, setSortAsc] = useState(false);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 10;
 
   const load = () => {
     setLoading(true);
@@ -29,12 +32,28 @@ export default function InboxPage() {
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
-    return jobs.filter(
+    const list = jobs.filter(
       (j) =>
         (!statusFilter || j.status === statusFilter) &&
         (j.description || "").toLowerCase().includes(q),
     );
-  }, [jobs, query, statusFilter]);
+    list.sort((a, b) => {
+      const cmp =
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return sortAsc ? cmp : -cmp;
+    });
+    return list;
+  }, [jobs, query, statusFilter, sortAsc]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [query, statusFilter, sortAsc]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice(
+    page * PAGE_SIZE,
+    page * PAGE_SIZE + PAGE_SIZE,
+  );
 
   return (
     <motion.div
@@ -73,6 +92,14 @@ export default function InboxPage() {
         </select>
         <button
           type="button"
+          data-testid="inbox-sort"
+          onClick={() => setSortAsc((v) => !v)}
+          className="px-3 py-2 border border-zinc-700 rounded text-sm text-zinc-300 hover:border-indigo-500"
+        >
+          {sortAsc ? "Oldest" : "Newest"}
+        </button>
+        <button
+          type="button"
           data-testid="inbox-refresh"
           onClick={load}
           className="px-3 py-2 border border-zinc-700 rounded text-sm text-zinc-300 hover:border-indigo-500"
@@ -105,7 +132,7 @@ export default function InboxPage() {
       )}
 
       <div className="space-y-2" data-testid="inbox-count">
-        {filtered.map((job) => (
+        {pageItems.map((job) => (
           <Link
             key={job.job_id}
             to={`/jobs/${job.job_id}`}
@@ -130,6 +157,32 @@ export default function InboxPage() {
         <p className="text-sm text-zinc-500 mt-3">
           {filtered.length} jobs need attention.
         </p>
+      )}
+      {!loading && pageCount > 1 && (
+        <div
+          className="flex items-center gap-2 mt-4 text-sm text-zinc-400"
+          data-testid="inbox-pagination"
+        >
+          <button
+            type="button"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+            className="px-3 py-1 border border-zinc-700 rounded disabled:opacity-30"
+          >
+            Prev
+          </button>
+          <span>
+            Page {page + 1} of {pageCount}
+          </span>
+          <button
+            type="button"
+            disabled={page >= pageCount - 1}
+            onClick={() => setPage((p) => p + 1)}
+            className="px-3 py-1 border border-zinc-700 rounded disabled:opacity-30"
+          >
+            Next
+          </button>
+        </div>
       )}
     </motion.div>
   );

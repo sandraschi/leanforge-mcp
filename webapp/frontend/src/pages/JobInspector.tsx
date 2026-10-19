@@ -46,7 +46,7 @@ export default function JobInspector() {
   const isRunning = job.status === "queued" || job.status === "running";
 
   return (
-    <div>
+    <div data-testid="job-page">
       <Link
         to="/"
         className="text-sm text-indigo-400 hover:underline mb-4 block"
@@ -60,6 +60,7 @@ export default function JobInspector() {
         {isRunning && (
           <button
             type="button"
+            data-testid="job-cancel"
             onClick={async () => {
               await cancelJob(job.job_id);
               fetchJob(job.job_id).then(setJob);
@@ -84,15 +85,18 @@ export default function JobInspector() {
 
       {job.status === "complete" && job.proof && (
         <div className="mb-6">
-          <h2 className="text-sm font-medium text-gray-400 mb-2">Proof</h2>
-          <pre className="border border-green-700 bg-green-950/20 rounded p-4 text-sm font-mono overflow-x-auto">
+          <h2 className="text-sm font-medium text-zinc-400 mb-2">Proof</h2>
+          <pre
+            data-testid="job-proof"
+            className="border border-green-700 bg-green-950/20 rounded p-4 text-sm font-mono overflow-x-auto"
+          >
             {job.proof}
           </pre>
         </div>
       )}
 
-      <div>
-        <h2 className="text-sm font-medium text-gray-400 mb-2">
+      <div data-testid="job-attempts">
+        <h2 className="text-sm font-medium text-zinc-400 mb-2">
           Attempts ({allAttempts.length})
         </h2>
         <AttemptTimeline attempts={allAttempts} />

@@ -276,7 +276,7 @@ export default function Help() {
   }
 
   return (
-    <div>
+    <div data-testid="help-page">
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-2xl font-semibold">Help</h1>
         <a
@@ -294,12 +294,13 @@ export default function Help() {
         {tabs.map((tab) => (
           <button
             type="button"
+            data-testid={`help-tab-${tab.id}`}
             key={tab.id}
             onClick={() => setActive(tab.id)}
             className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
               active === tab.id
                 ? "border-indigo-500 text-indigo-300"
-                : "border-transparent text-gray-400 hover:text-gray-200"
+                : "border-transparent text-zinc-400 hover:text-zinc-200"
             }`}
           >
             {tab.label}
@@ -308,7 +309,9 @@ export default function Help() {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl">{renderContent()}</div>
+      <div className="max-w-4xl" data-testid="help-doc">
+        {renderContent()}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Job, SystemStatus } from "../api";
 import { fetchJobs, fetchStatus } from "../api";
@@ -290,9 +290,14 @@ function Hero({
 // ---------------------------------------------------------------------------
 
 export default function Dashboard() {
+  const PAGE_SIZE = 10;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("");
+  const [query, setQuery] = useState("");
+  const [sortKey, setSortKey] = useState("created");
+  const [sortAsc, setSortAsc] = useState(false);
+  const [page, setPage] = useState(0);
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [backendUp, setBackendUp] = useState(false);
 
@@ -335,6 +340,28 @@ export default function Dashboard() {
     failed: jobs.filter((j) => j.status === "failed").length,
   };
 
+  const visibleJobs = useMemo(() => {
+    const q = query.toLowerCase();
+    const list = jobs.filter((j) =>
+      (j.description || "").toLowerCase().includes(q),
+    );
+    list.sort((a, b) => {
+      let cmp: number;
+      if (sortKey === "status") cmp = a.status.localeCompare(b.status);
+      else
+        cmp =
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return sortAsc ? cmp : -cmp;
+    });
+    return list;
+  }, [jobs, query, sortKey, sortAsc]);
+
+  const pageCount = Math.max(1, Math.ceil(visibleJobs.length / PAGE_SIZE));
+  const pageJobs = visibleJobs.slice(
+    page * PAGE_SIZE,
+    page * PAGE_SIZE + PAGE_SIZE,
+  );
+
   // MOCK-until-onboarded: declared sample cards shown only while the backend
   // is down or the Lean workspace is not ready AND no real jobs exist yet.
   // They clear automatically once onboarding succeeds.
@@ -362,23 +389,55 @@ export default function Dashboard() {
 
       {/* Job list */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-200">Proof Jobs</h2>
+        <h2 className="text-lg font-semibold text-zinc-200">Proof Jobs</h2>
         <div className="flex gap-2 text-sm">
           {(["", "running", "complete", "failed"] as const).map((s) => (
             <button
               type="button"
               key={s}
-              onClick={() => setFilter(s)}
+              onClick={() => {
+                setFilter(s);
+                setPage(0);
+              }}
               className={`px-3 py-1 rounded border text-sm ${
                 filter === s
                   ? "border-indigo-500 bg-indigo-950/40 text-indigo-300"
-                  : "border-border text-gray-400 hover:text-gray-200"
+                  : "border-border text-zinc-400 hover:text-zinc-200"
               }`}
             >
               {s || "all"} ({counts[s as keyof typeof counts] ?? 0})
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        <input
+          data-testid="search-jobs"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setPage(0);
+          }}
+          placeholder="Search job descriptions..."
+          className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500"
+        />
+        <select
+          data-testid="jobs-sort"
+          value={sortKey}
+          onChange={(e) => setSortKey(e.target.value)}
+          className="bg-zinc-800 text-zinc-100 border border-zinc-600 rounded px-2 py-1 text-sm"
+        >
+          <option value="created">Created</option>
+          <option value="status">Status</option>
+        </select>
+        <button
+          type="button"
+          onClick={() => setSortAsc((v) => !v)}
+          className="px-3 py-2 border border-zinc-700 rounded text-sm text-zinc-300 hover:border-indigo-500"
+        >
+          {sortAsc ? "Asc" : "Desc"}
+        </button>
       </div>
 
       {showMockJobs && (
@@ -424,8 +483,8 @@ export default function Dashboard() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-2">
-          {jobs.map((job) => (
+        <div className="space-y-2" data-testid="jobs-count">
+          {pageJobs.map((job) => (
             <Link
               key={job.job_id}
               to={`/jobs/${job.job_id}`}
@@ -437,7 +496,7 @@ export default function Dashboard() {
                 </span>
                 <StatusBadge status={job.status} />
               </div>
-              <p className="text-sm text-gray-300 truncate">
+              <p className="text-sm text-zinc-300 truncate">
                 {job.description || "(no description)"}
               </p>
               <p className="text-sm text-zinc-500 mt-1">
@@ -445,6 +504,32 @@ export default function Dashboard() {
               </p>
             </Link>
           ))}
+        </div>
+      )}
+      {!loading && jobs.length > 0 && pageCount > 1 && (
+        <div
+          className="flex items-center gap-2 mt-4 text-sm text-zinc-400"
+          data-testid="jobs-pagination"
+        >
+          <button
+            type="button"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+            className="px-3 py-1 border border-zinc-700 rounded disabled:opacity-30"
+          >
+            Prev
+          </button>
+          <span>
+            Page {page + 1} of {pageCount} ({visibleJobs.length} jobs)
+          </span>
+          <button
+            type="button"
+            disabled={page >= pageCount - 1}
+            onClick={() => setPage((p) => p + 1)}
+            className="px-3 py-1 border border-zinc-700 rounded disabled:opacity-30"
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

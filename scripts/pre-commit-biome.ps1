@@ -6,7 +6,7 @@ Runs `bun run biome:ci` when the frontend exists; passes silently otherwise.
 #>
 $ErrorActionPreference = "Stop"
 
-$webapp = Join-Path $PSScriptRoot ".." "webapp" "frontend"
+$webapp = "$PSScriptRoot\..\webapp\frontend"
 if (-not (Test-Path (Join-Path $webapp "package.json"))) { exit 0 }
 
 $bun = Join-Path $env:USERPROFILE ".bun\bin\bun.exe"

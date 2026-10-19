@@ -11,8 +11,8 @@ repos:
     hooks:
       - id: biome-frontend
         name: biome (webapp frontend)
-        entry: scripts/pre-commit-biome.ps1
-        language: script
+        entry: powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/pre-commit-biome.ps1
+        language: system
         pass_filenames: false
         files: ^webapp/frontend/src/
 
