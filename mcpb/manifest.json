@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.2",
   "name": "leanforge-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for AI-driven formal proof search in Lean 4",
   "author": { "name": "sandraschi" },
   "server": {

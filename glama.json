@@ -1,7 +1,7 @@
 {
   "name": "leanforge-mcp",
   "description": "MCP server for AI-driven formal proof search in Lean 4. Submit a theorem; get back a machine-verified proof. Implements the AlphaProof Nexus agentic loop (arXiv:2605.22763): LLM proposes, Lean compiler judges, errors feed back.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "sandraschi",
   "license": "MIT",
   "homepage": "https://github.com/sandraschi/leanforge-mcp",
