@@ -23,6 +23,8 @@ v0.1.1 bundle + registry pin + GitHub release.
   artifact cleaned, not committed). NSIS installer itself still needs an
   interactive shell (tauri-cli + NSIS + cert) -- documented, not attempted.
 - Playwright browsers confirmed machine-wide (e2e-install satisfied).
+- Removed stale `src-tauri/` scaffold twin (`native/` is canonical -- CUA
+  config, QA docs, and maintained build script all live there).
 
 ### Added (2026-10-19 -- assfix session 3 "do the rest", score 83 -> 94 self-assessed)
 
