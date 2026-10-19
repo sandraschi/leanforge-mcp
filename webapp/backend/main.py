@@ -28,7 +28,7 @@ from leanforge_mcp.core.job_manager import JobManager
 from leanforge_mcp.core.lean_client import LeanClient
 from leanforge_mcp.core.runner import Runner
 from webapp.backend.event_bus import JobEventBus
-from webapp.backend.routes import docs, jobs, llm, logs, problems, skills, status, stream
+from webapp.backend.routes import docs, fleet, jobs, llm, logs, problems, skills, status, stream
 
 CONFIG_PATH = Path(__file__).parent.parent.parent / "config.toml"
 BACKEND_PORT = 10867
@@ -116,6 +116,7 @@ app.include_router(skills.router)
 app.include_router(docs.router)
 app.include_router(llm.router)
 app.include_router(logs.router)
+app.include_router(fleet.router)
 
 
 @app.post("/api/shutdown")
