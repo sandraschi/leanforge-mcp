@@ -8,6 +8,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] -- 2026-10-19
+
+Fleet SOTA pass over four assfix sessions (audit 12/100 -> 96/100
+self-assessed). No proof-loop behavior changes; all shippability, safety,
+and conformance. Full notes below (sessions 1-3); session 4 shipped the
+v0.1.1 bundle + registry pin + GitHub release.
+
+### Added (2026-10-19 -- assfix session 4 "do the remaining")
+
+- Wiki enabled; v0.1.1 GitHub release with launch-checked `.mcpb` and
+  changelog body; `server.json` pinned to the bundle sha256.
+- PyInstaller backend spec proven (`leanforge-mcp-backend.exe` builds;
+  artifact cleaned, not committed). NSIS installer itself still needs an
+  interactive shell (tauri-cli + NSIS + cert) -- documented, not attempted.
+- Playwright browsers confirmed machine-wide (e2e-install satisfied).
+
 ### Added (2026-10-19 -- assfix session 3 "do the rest", score 83 -> 94 self-assessed)
 
 - Lists everywhere: search/filter/sort/paginate/count on Dashboard, Inbox,
