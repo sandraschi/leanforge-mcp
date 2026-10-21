@@ -402,6 +402,11 @@ of the statement before proof search. The formalization step is often the harder
 
 - Tsoukalas, G., et al. (2024). **PutnamBench: Evaluating Neural Theorem-Provers on the Putnam Mathematical Competition.** [arXiv:2407.11214](https://arxiv.org/abs/2407.11214)
 
+**Large-scale formalization (worked example)**
+
+- Koonce, B. (2026). **Verified Deep Learning with Lean 4: Formal Backpropagation from MLP to Attention, via MLIR.** Apress (forthcoming); companion code v0.7.2. [doi:10.5281/zenodo.20402133](https://doi.org/10.5281/zenodo.20402133) - [github.com/brettkoonce/lean4-mlir](https://github.com/brettkoonce/lean4-mlir)
+  -- 242 proof files over Mathlib's `fderiv` (chain, sum and product rules proved rather than axiomatized; zero project axioms), plus a denotational tie between the emitted GPU graph and the certified step. The largest public `fderiv`-heavy Lean development we know of. Derivative-heavy hint pack extracted from it: [HINT_PACK_FDERIV.md](HINT_PACK_FDERIV.md).
+
 **Lean / type theory**
 
 - Avigad, J., et al. (2024). **Theorem Proving in Lean 4.** (online textbook) [leanprover.github.io/theorem_proving_in_lean4](https://leanprover.github.io/theorem_proving_in_lean4/)
@@ -477,3 +482,5 @@ of the statement before proof search. The formalization step is often the harder
 | ntp-toolkit (next-step prediction) | https://github.com/leanprover-community/ntp-toolkit |
 | Lean Copilot | https://github.com/lean-dojo/LeanCopilot |
 | mathlib4 on Glama | https://glama.ai/mcp/servers/mathlib4 |
+| lean4-mlir (verified backprop, 242 proof files) | https://github.com/brettkoonce/lean4-mlir |
+| lean4-mlir book (blueprint + PDF) | https://lean.brettkoonce.com/blueprint/ |
