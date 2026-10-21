@@ -100,8 +100,12 @@ async def submit_theorem(input: SubmitTheoremInput, ctx: Context) -> dict:
         description=input.statement[:100],
         statement=input.statement,
     )
-    if input.hints:
-        lean_source = f"-- HINTS: {input.hints}\n" + lean_source
+    if input.hints and input.hints.strip():
+        # Every hint line must become its own comment: a raw newline would end the
+        # comment and inject the next line as Lean code.
+        hint_lines = input.hints.strip().splitlines()
+        hint_block = "\n".join([f"-- HINTS: {hint_lines[0]}", *(f"-- {line}" for line in hint_lines[1:])])
+        lean_source = f"{hint_block}\n" + lean_source
 
     job_id = await runner.start_job(
         lean_source=lean_source,
