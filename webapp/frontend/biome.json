@@ -1,26 +1,26 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "suspicious": {
-        "noConsole": "error",
-        "noExplicitAny": "warn"
-      },
-      "correctness": {
-        "noUnusedVariables": "error"
-      }
-    }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2
-  },
-  "overrides": [
-    {
-      "includes": ["src/index.css"],
-      "linter": { "rules": { "suspicious": { "noUnknownAtRules": "off" } } }
-    }
-  ]
+	"$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"suspicious": {
+				"noConsole": "error",
+				"noExplicitAny": "warn"
+			},
+			"correctness": {
+				"noUnusedVariables": "error"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "space",
+		"indentWidth": 2
+	},
+	"overrides": [
+		{
+			"includes": ["src/index.css"],
+			"linter": { "rules": { "suspicious": { "noUnknownAtRules": "off" } } }
+		}
+	]
 }
